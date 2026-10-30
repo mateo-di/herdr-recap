@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- **Recaps for the Herdr app.** `herdr-recap sessions` gives the session and
+  recap of Claude agents named by their process rather than a herdr pane,
+  and with `--write` writes the out-of-date ones in the background. The
+  Herdr app runs its agents in herdr-core, which herdr doesn't see, and
+  [mods-recap](https://github.com/mrolafsson/mods-recap) uses this to show
+  their recaps there. Recaps are shared with this plugin's.
+
 ## 0.10.1 - 2026-10-21
 
 - **A rename shows in herdr straight away.** Where a plugin gives herdr the

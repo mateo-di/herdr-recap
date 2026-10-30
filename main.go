@@ -31,6 +31,10 @@ const usage = `herdr-recap — what each of your agents was doing, in herdr
                    still the one numbered N
   handoff JSON     (internal) open another plugin's popup once this one closes
   list             what the popup would show, as text: agents, sessions, recaps
+  sessions [--write] JSON
+                   for the Herdr app's mod: the session and cached recap of each
+                   Claude process in [{"pid": N, "title": "…"}, …], as JSON;
+                   --write: write the out-of-date ones, in the background
 `
 
 func main() {
@@ -81,6 +85,8 @@ func run(ctx context.Context, args []string) error {
 		return runRecapCommand(ctx, cfg, args[1:])
 	case "list":
 		return debugList(cfg)
+	case "sessions":
+		return runSessions(ctx, cfg, args[1:])
 	default:
 		fmt.Print(usage)
 		return fmt.Errorf("unknown command %q", args[0])
