@@ -121,7 +121,10 @@ func runSessions(ctx context.Context, cfg config, args []string) error {
 		c := loadRecap(s.ID)
 		info.Fresh = fresh(c, s)
 		if c != nil {
-			info.Recap, info.At, info.Title = c.Text, c.At, c.Title
+			info.Recap, info.At = c.Text, c.At
+			if !c.Settled {
+				info.Title = c.Title
+			}
 		}
 		if !info.Fresh && s.Transcript != "" {
 			stale = append(stale, a)
