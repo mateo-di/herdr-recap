@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
+	"strings"
 	"time"
 )
 
@@ -15,22 +17,44 @@ import (
 // its agents in herdr-core, not the herdr server, so it names an agent by its
 // Claude process rather than a herdr pane, and runs this where the agent runs.
 
-// sessionAsk is one agent the mod shows: its Claude process and its title.
+// sessionAsk is one agent the mod shows: its Claude process, its title, and
+// the folder it's in now (where it may have moved since it started).
 type sessionAsk struct {
 	PID   int    `json:"pid"`
 	Title string `json:"title,omitempty"`
+	Cwd   string `json:"cwd,omitempty"`
 }
 
-// sessionInfo is what the mod is told of it. Recap is the cached one, written
-// for an earlier point when Fresh is false; Error says why there's none.
+// sessionInfo is what the mod is told of it: what the popup shows of an
+// agent, short of what herdr-github and herdr-linear know. Recap is the
+// cached one, written for an earlier point when Fresh is false; Error says
+// why there's none.
 type sessionInfo struct {
 	PID     int       `json:"pid"`
 	Session string    `json:"session,omitempty"`
 	Recap   string    `json:"recap,omitempty"`
 	At      time.Time `json:"at,omitzero"`
 	Fresh   bool      `json:"fresh"`
-	Title   string    `json:"title,omitempty"`
-	Error   string    `json:"error,omitempty"`
+	// Title: a better one, when the agent's own is poor.
+	Title string `json:"title,omitempty"`
+	// From the transcript.
+	Model      string    `json:"model,omitempty"`
+	Mode       string    `json:"mode,omitempty"`
+	LastPrompt string    `json:"last_prompt,omitempty"`
+	PromptAt   time.Time `json:"prompt_at,omitzero"`
+	Active     time.Time `json:"active,omitzero"`
+	Pending    string    `json:"pending,omitempty"`
+	PendingAt  time.Time `json:"pending_at,omitzero"`
+	TasksDone  int       `json:"tasks_done,omitempty"`
+	TasksTotal int       `json:"tasks_total,omitempty"`
+	// From git: the branch, its ticket's key, what's not committed or
+	// pushed, and where it pushes to, for herdr-github to find its PR by.
+	Branch  string     `json:"branch,omitempty"`
+	Ticket  string     `json:"ticket,omitempty"`
+	Changes gitChanges `json:"changes"`
+	Remote  string     `json:"remote,omitempty"`
+	Head    string     `json:"head,omitempty"`
+	Error   string     `json:"error,omitempty"`
 }
 
 // runSessions prints each asked-for agent's session and cached recap as JSON.
@@ -78,6 +102,22 @@ func runSessions(ctx context.Context, cfg config, args []string) error {
 			continue
 		}
 		info.Session = s.ID
+		meta := readMeta(s.Transcript)
+		info.Model, info.Mode, info.LastPrompt = shortModel(meta.Model), meta.Mode, meta.LastPrompt
+		info.PromptAt, info.Active = meta.PromptAt, meta.Active
+		info.Pending, info.PendingAt = meta.Pending, meta.PendingAt
+		info.TasksDone, info.TasksTotal = meta.TasksDone, meta.TasksTotal
+		dir := a.Cwd
+		if dir == "" {
+			dir = s.Cwd
+		}
+		info.Branch = gitBranch(dir)
+		if info.Branch == "" {
+			info.Branch = meta.Branch
+		}
+		info.Ticket = ticketKey(info.Branch)
+		info.Changes = readChanges(dir)
+		info.Remote, info.Head = gitPushTarget(dir)
 		c := loadRecap(s.ID)
 		info.Fresh = fresh(c, s)
 		if c != nil {
@@ -95,4 +135,23 @@ func runSessions(ctx context.Context, cfg config, args []string) error {
 		}
 	}
 	return json.NewEncoder(os.Stdout).Encode(out)
+}
+
+// gitPushTarget is where dir's branch pushes: origin's URL, and its
+// upstream's branch name ("" when it has none yet).
+func gitPushTarget(dir string) (remote, head string) {
+	if dir == "" {
+		return "", ""
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	git := func(args ...string) string {
+		out, _ := exec.CommandContext(ctx, "git", append([]string{"-C", dir}, args...)...).Output()
+		return strings.TrimSpace(string(out))
+	}
+	remote = git("remote", "get-url", "origin")
+	if up := git("rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{upstream}"); up != "" {
+		_, head, _ = strings.Cut(up, "/")
+	}
+	return remote, head
 }

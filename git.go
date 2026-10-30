@@ -12,9 +12,11 @@ import (
 // gitChanges is how an agent's worktree differs from what's committed and
 // pushed: work waiting to be committed, or pushed.
 type gitChanges struct {
-	Files          int // changed or new files
-	Added, Deleted int // lines, against HEAD
-	Ahead, Behind  int // commits, against its upstream
+	Files   int `json:"files"`   // changed or new files
+	Added   int `json:"added"`   // lines, against HEAD
+	Deleted int `json:"deleted"` // lines, against HEAD
+	Ahead   int `json:"ahead"`   // commits, against its upstream
+	Behind  int `json:"behind"`  // commits, against its upstream
 }
 
 func (c gitChanges) empty() bool { return c == gitChanges{} }
