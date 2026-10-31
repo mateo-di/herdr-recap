@@ -81,8 +81,13 @@ func runSessions(ctx context.Context, cfg config, args []string) error {
 	if *now {
 		for _, a := range asks {
 			s, err := sessionForPID(a.PID, "claude")
+			var ran bool
 			if err == nil {
-				_, _, err = ensureRecap(ctx, cfg, s, a.Title, false)
+				_, ran, err = ensureRecap(ctx, cfg, s, a.Title, false)
+			}
+			// A recap that was fresh asked for no title: ask for it now.
+			if err == nil && !ran && wantsTitle(s, loadRecap(s.ID), a.Title, a.Cwd) {
+				_, err = ensureTitle(ctx, cfg, s, a.Title)
 			}
 			if err != nil && !errors.Is(err, errNothingYet) {
 				fmt.Fprintln(os.Stderr, "herdr-recap: recap of", a.PID, "failed:", err)
@@ -126,7 +131,7 @@ func runSessions(ctx context.Context, cfg config, args []string) error {
 				info.Title = c.Title
 			}
 		}
-		if !info.Fresh && s.Transcript != "" {
+		if s.Transcript != "" && (!info.Fresh || wantsTitle(s, c, a.Title, dir)) {
 			stale = append(stale, a)
 		}
 		out = append(out, info)
@@ -157,4 +162,16 @@ func gitPushTarget(dir string) (remote, head string) {
 		_, head, _ = strings.Cut(up, "/")
 	}
 	return remote, head
+}
+
+// wantsTitle: the agent's title is poor and no better one has been
+// suggested, or turned down, yet.
+func wantsTitle(s claudeSession, c *recap, title, dir string) bool {
+	if c != nil && (c.Title != "" || c.Settled) {
+		return false
+	}
+	if dir == "" {
+		dir = s.Cwd
+	}
+	return titleable(s) && poorTitle(title, gitBranch(dir))
 }
