@@ -165,7 +165,7 @@ export default class Recap extends View {
     this.changed = JSON.parse(localStorage.getItem("changed") ?? "{}");
     // The demo's made-up agents in place of the real ones (recap.demo): for
     // this opening only, never kept, so the popup always opens on your own.
-    this.demo = false;
+    this.demo = Boolean(props()?.demo);
     localStorage.removeItem("demo");
 
     this.input = InputState.new({ placeholder: "Type to filter…  ← → to change tabs" });
@@ -254,9 +254,10 @@ export default class Recap extends View {
   // else in the browser.
   openPR(pr) {
     const m = /^https:\/\/([^/]+)\/([^/]+\/[^/]+)\/pull\/(\d+)/.exec(pr?.url ?? "");
-    if (!this.github || !m || this.demo) return this.open(pr?.url);
+    if (!this.github || !m) return this.open(pr?.url);
     this.dismiss();
-    openOverlay({ mod: "github", kind: "dialog", width: 0.8, height: 0.8, props: { pr: { host: m[1], repo: m[2], number: Number(m[3]) }, back: "recap" } });
+    // The demo's pull requests are the GitHub mod's demo's: it opens on them there.
+    openOverlay({ mod: "github", kind: "dialog", width: 0.8, height: 0.8, props: { pr: { host: m[1], repo: m[2], number: Number(m[3]) }, back: "recap", demo: this.demo || undefined } });
   }
 
   open(url) {
