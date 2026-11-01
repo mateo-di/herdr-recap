@@ -44,7 +44,7 @@ function ticketKey(s) {
 // The herdr-recap this mod is part of (its release; the repo's tests hold it
 // to herdr-plugin.toml's version). It does the work on each machine with
 // agents: their sessions, recaps and titles, with the TUI plugin's cache.
-export const RECAP_VERSION = "0.12.2";
+export const RECAP_VERSION = "0.12.3";
 
 // Puts that release on a machine, once: into a folder of its own version, so
 // it never touches a herdr-recap installed for the TUI. The archive for the
@@ -624,9 +624,9 @@ export default class Recap extends View {
       })
       // The chosen one's mark, in its stage's colour: a bar set a little in
       // from the card's edge, inside its background.
-      .child(v_flex().w(3).ml(5).flex_none().pt(14).pb(14).child(div().flex_1().min_h(16).rounded(2).when(on, (el) => el.bg(tone))))
+      .child(v_flex().w(3).ml(12).flex_none().pt(12).pb(12).child(div().flex_1().min_h(16).rounded(2).when(on, (el) => el.bg(tone))))
       .child(
-        h_flex().flex_1().min_w(0).items_start().gap(10).pl(6).pr(14).pt(11).pb(12)
+        h_flex().flex_1().min_w(0).items_start().gap(10).pl(8).pr(14).pt(11).pb(12)
           .child(div().flex_none().pt(1).child(stateIcon(o, r)))
           .child(
             v_flex().flex_1().min_w(0).gap(6)

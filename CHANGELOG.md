@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.12.3 - 2026-11-01
+
+- **The chosen card's mark sits inside it,** set in from its edge as far as
+  from its top and bottom.
+- **The app mod's recipe tells the agent installing it what to do,** and
+  not to install herdr-recap itself: the mod fetches it onto each machine.
+
 ## 0.12.2 - 2026-11-01
 
 - **Titles on demand in the app, and your own.** As in the TUI, `ctrl+r` on

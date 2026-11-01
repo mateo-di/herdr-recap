@@ -10,6 +10,31 @@ opened with ⌘R. It's the Herdr app's side of
 [herdr-recap](https://github.com/mrolafsson/herdr-recap), which writes the
 recaps.
 
+## Installing it (for the agent adding it)
+
+1. Copy `mods/recap/` to `~/.config/herdr-app/mods/recap/`.
+2. Merge `keys.json` into the person's: add its sections and keys; ask
+   before replacing a key they already bind to something else.
+3. `herdr-app check ~/.config/herdr-app/mods/recap`.
+
+That's all. **Don't install herdr-recap, or anything else, on any machine:**
+the mod fetches the herdr-recap release it needs onto each machine with
+agents by itself, the first time it looks there, and it does the same for
+machines added later. What it needs there is already present: Claude Code
+(the agents themselves), and `curl`, `tar` and `sha256sum` or `shasum`,
+which macOS and Linux have.
+
+Optional, for pull requests and Linear issues on the cards: herdr-github
+and herdr-linear in `~/.local/bin` where the person is signed in to GitHub
+and Linear. Mention them; don't install them unasked.
+
+To see that it works: open it (⌘R). The first opening on a machine takes a
+few seconds longer while herdr-recap is fetched; afterwards it's in
+`~/.local/share/herdr-recap/app/<version>/` there, and recaps appear on the
+cards (written in the background for agents that aren't working, so give
+it a minute and open it again). A machine it couldn't reach, or couldn't
+fetch herdr-recap onto, is named in a line under the list with why.
+
 ## What it does, and asks
 
 - Lists `agents()` from every machine, grouped into stages: Needs you,
