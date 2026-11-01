@@ -35,6 +35,19 @@ recaps.
    before replacing a key they already bind to something else.
 3. `herdr-app check ~/.config/herdr-app/mods/recap`.
 
+**Already installed? That's an update, not a clash.** If
+`mods/recap/` exists and is this mod (its `main.js` sets `RECAP_VERSION`
+and fetches herdr-recap), replace its files with these, in place: don't
+install a second copy under another name. Its keys are merged already;
+step 2 only adds any new ones.
+
+**A different mod named `recap`?** Then rename this one, and everything
+that names it follows: the folder; `ICONS` in `look.js`
+(`mods/<name>/icons`); in `keys.json`, the section `mod:recap` and every
+action in it (`recap.reply`, `recap.rename`, `recap.ignore`,
+`recap.escape`), and `mod.open:recap`. Missing any of them leaves Tab, Esc
+or ⌘R doing the app's own thing instead.
+
 That's all. **Don't install herdr-recap, or anything else, on any machine:**
 the mod fetches the herdr-recap release it needs onto each machine with
 agents by itself, the first time it looks there, and it does the same for
