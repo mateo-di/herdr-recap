@@ -32,6 +32,7 @@ app() {
 		trap 'rm -rf "$tmp"' EXIT
 		curl -fsSL "https://github.com/$REPO/archive/refs/tags/$tag.tar.gz" | tar -xz -C "$tmp"
 		src=$(echo "$tmp"/*/app)
+		[ -d "$src/mods/recap" ] || { echo "herdr-recap $tag has no app mod: it's in 0.12.0 and later" >&2; return 1; }
 	fi
 	mkdir -p "$home/mods/recap"
 	cp -R "$src/mods/recap/." "$home/mods/recap/"
