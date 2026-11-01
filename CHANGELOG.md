@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.12.2 - 2026-11-01
+
+- **Titles on demand in the app, and your own.** As in the TUI, `ctrl+r` on
+  an agent with no suggested title asks for one there and then (the card
+  says so until it comes), for you to take or ignore. `ctrl+e` renames an
+  agent to a title you type: its own, to edit, and `/rename` once it's
+  between turns. `herdr-recap title` is how the app asks, in the background.
+
 ## 0.12.1 - 2026-11-01
 
 - **The app's Recap always opens on your own agents.** Its demo lasted

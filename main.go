@@ -35,6 +35,9 @@ const usage = `herdr-recap — what each of your agents was doing, in herdr
                    for the Herdr app's mod: the session and cached recap of each
                    Claude process in [{"pid": N, "title": "…"}, …], as JSON;
                    --write: write the out-of-date ones, in the background
+  title JSON       for the Herdr app's mod: ask for a better title for each Claude
+                   process in [{"pid": N, "title": "…"}, …], in the background;
+                   it comes with the next sessions
   settle SESSION   the session's suggested title was taken or turned down:
                    don't suggest it again
 `
@@ -89,6 +92,8 @@ func run(ctx context.Context, args []string) error {
 		return debugList(cfg)
 	case "sessions":
 		return runSessions(ctx, cfg, args[1:])
+	case "title":
+		return runTitle(ctx, cfg, args[1:])
 	case "settle":
 		if len(args) != 2 || !sessionIDPattern.MatchString(args[1]) {
 			return errors.New("settle needs one session ID")

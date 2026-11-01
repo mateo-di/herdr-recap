@@ -175,3 +175,38 @@ func wantsTitle(s claudeSession, c *recap, title, dir string) bool {
 	}
 	return titleable(s) && poorTitle(title, gitBranch(dir))
 }
+
+// runTitle asks for a better title for each asked-for agent, whatever its own
+// is like: the app's ctrl+r on an agent with none suggested, as the TUI's.
+// Like `sessions --write`, a copy of this program does it in the background
+// (a title can take longer than the mod waits), and the suggestion comes with
+// the next `sessions`. --now: here and now.
+func runTitle(ctx context.Context, cfg config, args []string) error {
+	now := len(args) > 0 && args[0] == "--now"
+	if now {
+		args = args[1:]
+	}
+	if len(args) != 1 {
+		return errors.New(`title needs one argument: [{"pid": N, "title": "…"}, …]`)
+	}
+	var asks []sessionAsk
+	if err := json.Unmarshal([]byte(args[0]), &asks); err != nil {
+		return fmt.Errorf("title: %w", err)
+	}
+	if !now {
+		if err := spawn("title", "--now", args[0]); err != nil {
+			return err
+		}
+		return json.NewEncoder(os.Stdout).Encode(map[string]int{"asked": len(asks)})
+	}
+	for _, a := range asks {
+		s, err := sessionForPID(a.PID, "claude")
+		if err == nil {
+			_, err = ensureTitle(ctx, cfg, s, a.Title)
+		}
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "herdr-recap: a title for", a.PID, "failed:", err)
+		}
+	}
+	return nil
+}
