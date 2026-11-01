@@ -613,11 +613,22 @@ export default class Recap extends View {
     return `for ${d}`;
   }
 
+  // What an agent's card says: its recap; else Claude's own word on where it
+  // is; else, for one at work with neither yet, what it was asked (its last
+  // prompt), or its Linear issue.
+  said(r) {
+    if (r.recap) return r.recap;
+    if (r.note) return r.note;
+    if (r.info?.last_prompt) return `› ${r.info.last_prompt}`;
+    if (r.ticket && r.issue?.title) return `${r.ticket}: ${r.issue.title}`;
+    return null;
+  }
+
   // About how tall an agent's card is, for the list's height: lines of the
   // recap at the popup's width, and a line each for what else it shows.
   height(r) {
     const perLine = Math.max(40, Math.floor((this.width - 120) / 6.6));
-    const said = r.recap ?? r.note ?? "Nothing to recap yet.";
+    const said = this.said(r) ?? "Nothing to recap yet.";
     // Padding and the title line; the recap's lines; the callout, the rename
     // line and the chips, each with its gap.
     let h = 23 + 22 + Math.ceil(said.length / perLine) * 19.5;
@@ -674,7 +685,7 @@ export default class Recap extends View {
     const on = r === sel;
     const need = r.stage === "blocked";
     const details = this.details(o, r);
-    const said = r.recap ?? r.note;
+    const said = this.said(r);
     const quiet = r.status === "idle" || r.stage === "merged";
     return h_flex()
       .id(`rc-${r.address}`)
