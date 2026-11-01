@@ -80,3 +80,7 @@ func openFiles(pid int) []string {
 	}
 	return files
 }
+
+// detached: macOS has no systemd; a new session outlives the asker (`hc
+// exec` included), so spawn starts its copy as is.
+func detached(self string, args []string, logPath string) *exec.Cmd { return nil }

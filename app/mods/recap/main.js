@@ -11,7 +11,7 @@
 import { View, div } from "gpui-kit";
 import * as fs from "fs/promises";
 import { v_flex, h_flex, InputState, Input } from "gpui-base";
-import { agents, machines, run, exec, hc, theme, appHome, props, closeOverlay, nextCommand, window } from "herdr";
+import { agents, machines, spaces, run, exec, hc, theme, appHome, props, closeOverlay, nextCommand, window } from "herdr";
 import { demoRows } from "./demo.js";
 import { tones, tint, STAGES, ALL, stageOf, stateIcon, stageColor, icon, prLook, issueIcon, chip, bar, duration, words, key, MONO } from "./look.js";
 
@@ -44,7 +44,7 @@ function ticketKey(s) {
 // The herdr-recap this mod is part of (its release; the repo's tests hold it
 // to herdr-plugin.toml's version). It does the work on each machine with
 // agents: their sessions, recaps and titles, with the TUI plugin's cache.
-export const RECAP_VERSION = "0.12.3";
+export const RECAP_VERSION = "0.12.4";
 
 // Puts that release on a machine, once: into a folder of its own version, so
 // it never touches a herdr-recap installed for the TUI. The archive for the
@@ -111,6 +111,9 @@ export default class Recap extends View {
     this.replying = null;
     // Renames asked for, by address: typed in once the agent's between turns.
     this.renaming = {};
+    // Renames done, by address: the new title, shown until the agent's own
+    // catches up (Claude Code sets the terminal's title at its next turn).
+    this.renamed = {};
     // Better titles asked for on demand (ctrl+r with none suggested), by
     // address: when, so the card can say so until one comes.
     this.asking = {};
@@ -272,7 +275,7 @@ export default class Recap extends View {
     cx.notify();
   }
 
-  // A title you typed (ctrl+e): /rename once the agent's between turns, and
+  // A title you typed (⌘E, or a click on the title): /rename once the agent's between turns, and
   // a suggestion, if any, isn't offered again.
   retitle(address, title, cx) {
     if (this.demo) {
@@ -314,6 +317,14 @@ export default class Recap extends View {
     });
   }
 
+  // A space takes its agent's new title, as the TUI's does, when nobody named
+  // it and the agent is the only one in it: its name was only a stand-in.
+  nameSpace(a, title) {
+    const space = spaces().find((s) => s.id === a.space);
+    if (!space || space.named || agents().filter((x) => x.space === a.space).length !== 1) return;
+    run("space.rename", { id: a.space, name: title });
+  }
+
   // Types in the renames asked for, for agents between turns.
   giveTitles(cx) {
     for (const a of agents()) {
@@ -326,6 +337,8 @@ export default class Recap extends View {
         else {
           delete this.unasked.rename;
           await this.settle(a.address);
+          this.renamed[a.address] = { title, from: clean(a.title) };
+          this.nameSpace(a, title);
         }
         delete this.renaming[a.address];
         this.typing.delete(a.address);
@@ -493,7 +506,10 @@ export default class Recap extends View {
     const core = this.core;
     return agents().map((a) => {
       const i = this.info[a.address] ?? {};
-      const title = clean(a.title);
+      // A rename just made, until the terminal's title says so itself.
+      const done = this.renamed[a.address];
+      if (done && clean(a.title) !== done.from) delete this.renamed[a.address];
+      const title = this.renamed[a.address]?.title ?? clean(a.title);
       const ticket = i.ticket ?? ticketKey(title);
       const r = {
         ...a,
@@ -632,12 +648,18 @@ export default class Recap extends View {
             v_flex().flex_1().min_w(0).gap(6)
               .child(
                 h_flex().gap(8).items_center()
-                  .child(div().min_w(0).truncate().text_size(14.5).font_semibold().text_color(o.fg).child(r.name || r.address))
+                  // The chosen card's title: a click renames it (as ⌘E).
+                  .child(div().id(`ti-${r.address}`).min_w(0).truncate().text_size(14.5).font_semibold().text_color(o.fg)
+                    .when(on, (el) => el.cursor_text().hover((s) => s.underline()).on_click((_e, cx) => {
+                      cx.stop_propagation();
+                      this.startReply(r, cx, "title");
+                    }))
+                    .child(r.name || r.address))
                   // Its machine, every card: another by name, this one as the app calls it.
                   .child(
                     h_flex().flex_none().h(18).px(6).gap(4).items_center().rounded(5).border_1().border_color(o.line).bg(o.sunk)
-                      .font_family(MONO).text_size(10.5).text_color(o.muted)
-                      .child(icon(r.machine ? "server" : "laptop", o.dim, 11))
+                      .font_family(MONO).text_size(10.5).text_color(o.fg)
+                      .child(icon(r.machine ? "server" : "laptop", o.muted, 11))
                       .child(div().child(r.machine ?? "this computer")))
                   .when(Boolean(r.space), (el) => el.child(div().flex_none().text_size(12).text_color(o.dim).child(r.space)))
                   .child(div().flex_1())
@@ -784,7 +806,7 @@ export default class Recap extends View {
         else if (k === "ctrl-g") this.open(sel?.pr?.url);
         else if (k === "ctrl-l") this.open(sel?.issue?.url);
         else if (k === "ctrl-r" && sel) this.rename(sel, cx);
-        else if (k === "ctrl-e" && sel) this.startReply(sel, cx, "title");
+        else if (k === "cmd-e" && sel) this.startReply(sel, cx, "title");
         else if (k === "ctrl-x" && sel?.suggested) this.ignore(sel, cx);
         else return;
         cx.stop_propagation();
@@ -847,7 +869,7 @@ export default class Recap extends View {
                   .child(key(o, ["^x"], "ignore", (cx) => this.ignore(sel, cx), "h-ignore")))
               .when(Boolean(sel && !sel.suggested && !sel.renaming && !sel.asking), (el) =>
                 el.child(key(o, ["^r"], "suggest a title", (cx) => this.rename(sel, cx), "h-suggest")))
-              .when(Boolean(sel), (el) => el.child(key(o, ["^e"], "rename", (cx) => this.startReply(sel, cx, "title"), "h-retitle")))
+              .when(Boolean(sel), (el) => el.child(key(o, ["⌘E"], "rename", (cx) => this.startReply(sel, cx, "title"), "h-retitle")))
               .when(Boolean(sel?.pr?.url), (el) => el.child(key(o, ["^g"], "pull request", () => this.open(sel.pr.url), "h-pr")))
               .when(Boolean(sel?.issue?.url), (el) => el.child(key(o, ["^l"], "issue", () => this.open(sel.issue.url), "h-issue")))
               .child(key(o, ["←", "→"], "stage", (cx) => (this.step(1), cx.notify()), "h-stage"))

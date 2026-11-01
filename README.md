@@ -265,7 +265,7 @@ herdr-linear are installed where you're signed in.
 **Keys**, from its `keys.json`, merged into the app's: ⌘R opens it; type to
 filter; ↑ ↓ and Enter go to an agent; ← → change stage; Tab replies (Enter
 sends, Esc leaves the reply); ctrl+r takes the better title suggested, or
-with none, asks for one now, and ctrl+x turns it down; ctrl+e renames it
+with none, asks for one now, and ctrl+x turns it down; ⌘E (or a click on its title) renames it
 yourself (the current title, to edit; Enter renames once it's between turns); ctrl+g and ctrl+l open its pull request or issue.
 With it open, `herdr-app do recap.demo` shows made-up agents instead, for a
 screenshot, until it closes; the header says so while it does.

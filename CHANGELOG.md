@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.12.4 - 2026-11-01
+
+- **Recaps and titles asked for from the Herdr app are written.** On Linux
+  the app runs commands through herdr-core, a systemd service that ends
+  whatever a command leaves running when it returns, so the background copy
+  that writes them was ended at once. Where systemd-run is, that copy is now
+  a unit of its own.
+- **A rename shows at once.** The card takes the new title straight away
+  (Claude Code updates the terminal's own at its next turn), and the
+  agent's space takes it too when nobody named it and the agent is alone
+  in it, as in the TUI.
+- **⌘E renames, not ctrl+e,** which the filter took to move to the end of
+  the line; so does a click on the chosen card's title.
+- **The machine on each card is easier to read.**
+
 ## 0.12.3 - 2026-11-01
 
 - **The chosen card's mark sits inside it,** set in from its edge as far as

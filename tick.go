@@ -91,6 +91,15 @@ var spawn = func(args ...string) error {
 		return err
 	}
 	defer log.Close()
+	// Under systemd (Linux), a unit of its own, which `hc exec` can't end.
+	if cmd := detached(self, args, log.Name()); cmd != nil {
+		// The unit's environment comes from --setenv, its log from the shell;
+		// what systemd-run itself says goes to the log too.
+		cmd.Stdout, cmd.Stderr = log, log
+		if err := cmd.Run(); err == nil {
+			return nil
+		}
+	}
 	cmd := exec.Command(self, args...)
 	cmd.Stdout, cmd.Stderr = log, log
 	// Its own session, so it outlives the hook: herdr may end the hook's
