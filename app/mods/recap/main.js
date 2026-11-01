@@ -794,11 +794,28 @@ export default class Recap extends View {
         .child(countPill(o, count(s.id), on));
     };
 
-    // Under All, a heading for each stage.
+    // The list starts at the agent that keeps the chosen one in sight (its
+    // cards have buttons of their own, so a list that scrolls itself isn't
+    // for them): up to the chosen one when it's above, and on from the top
+    // while what's between doesn't fit.
+    const headed = (i) => this.tab === "all" && (i === 0 || this.shown[i].stage !== this.shown[i - 1].stage);
+    const est = (i) => this.height(this.shown[i]) + (headed(i) ? 32 : 0);
+    this.first = Math.max(0, Math.min(this.first ?? 0, this.at));
+    while (this.first < this.at) {
+      let h = 32; // the first one's heading
+      for (let i = this.first; i <= this.at; i++) h += est(i);
+      if (h <= LIST_MAX) break;
+      this.first++;
+    }
+
+    // Under All, a heading for each stage, and above the first one shown.
     const items = [];
     let last = null;
     let headings = 0;
-    for (const r of this.shown) {
+    if (this.first > 0) {
+      items.push(div().flex_none().px(10).text_size(11).text_color(o.dim).child(`↑ ${this.first} more`));
+    }
+    for (const r of this.shown.slice(this.first)) {
       if (this.tab === "all" && r.stage !== last) {
         const s = STAGES.find((s) => s.id === r.stage);
         // Small capitals in the stage's colour, its count, a rule.
@@ -850,8 +867,8 @@ export default class Recap extends View {
           return cx.stop_propagation();
         }
         if (k === "escape") return this.dismiss();
-        if (k === "down" && this.shown.length) this.at = (this.at + 1) % this.shown.length;
-        else if (k === "up" && this.shown.length) this.at = (this.at + this.shown.length - 1) % this.shown.length;
+        if (k === "down" && this.shown.length) this.at = Math.min(this.shown.length - 1, this.at + 1);
+        else if (k === "up" && this.shown.length) this.at = Math.max(0, this.at - 1);
         // The cursor keeps ←/→ while there's a filter to move through.
         else if (k === "right" && !this.filter) (this.step(1), (this.at = 0));
         else if (k === "left" && !this.filter) (this.step(-1), (this.at = 0));
@@ -879,7 +896,17 @@ export default class Recap extends View {
           .min_h(0)
           .flex_shrink(1)
           .gap(2)
-          .overflow_y_scrollbar()
+          .overflow_hidden()
+          // The wheel moves through the agents, as ↑ ↓ do.
+          .on_scroll_wheel((e, cx) => {
+            this.wheel = (this.wheel ?? 0) + (e.delta_lines ? e.delta_lines.y * 40 : e.delta.y);
+            const n = this.shown.length;
+            while (Math.abs(this.wheel) >= 40 && n) {
+              this.at = Math.max(0, Math.min(n - 1, this.at + (this.wheel < 0 ? 1 : -1)));
+              this.wheel -= Math.sign(this.wheel) * 40;
+            }
+            cx.notify();
+          })
           .when(!this.shown.length, (el) => el.child(div().px(14).py(10).text_size(12.8).text_color(o.dim).child(empty)))
           .children(items),
       )
