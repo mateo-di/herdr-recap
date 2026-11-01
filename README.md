@@ -167,8 +167,8 @@ The design it's built to, with its icons, type scale and colour roles, is
 
 ## Works with the other herdr plugins
 
-This is one of six plugins that are useful alone and better together.
-Install [herdr-github](https://github.com/mrolafsson/herdr-github), [herdr-linear](https://github.com/mrolafsson/herdr-linear), [herdr-snooze](https://github.com/mrolafsson/herdr-snooze), [herdr-vitals](https://github.com/mrolafsson/herdr-vitals) or [herdr-file-transfer](https://github.com/mrolafsson/herdr-file-transfer) alongside it and they find each other:
+This is one of seven plugins that are useful alone and better together.
+Install [herdr-github](https://github.com/mrolafsson/herdr-github), [herdr-linear](https://github.com/mrolafsson/herdr-linear), [herdr-snooze](https://github.com/mrolafsson/herdr-snooze), [herdr-vitals](https://github.com/mrolafsson/herdr-vitals), [herdr-file-transfer](https://github.com/mrolafsson/herdr-file-transfer) or [herdr-teleport](https://github.com/mrolafsson/herdr-teleport) alongside it and they find each other:
 there is nothing to configure.
 
 | Plugin | What it adds to the others |
@@ -179,6 +179,7 @@ there is nothing to configure.
 | [herdr-snooze](https://github.com/mrolafsson/herdr-snooze) | Hides an agent, or a whole space, from herdr's Agents panel until a time you pick, or until the agent's done or its pull request is merged (from herdr-github's labels). Tags each snoozed agent with when it wakes (`💤 17:30`, `💤 till done`), which Recap shows. Opens straight on an agent when Recap asks, and opens Recap on one with `r`. |
 | [herdr-vitals](https://github.com/mrolafsson/herdr-vitals) | How the machine is doing: right of Recap's tabs, a small graph of its CPU and a gauge of its memory, yellow from 80% and red from 90%, when there's room. A click on it opens Vitals on every machine you work on, and `esc` comes back. |
 | [herdr-file-transfer](https://github.com/mrolafsson/herdr-file-transfer) | Files between the machine you're at and the server herdr runs on. Chooses the files a new Linear issue attaches (`ctrl+f` in herdr-linear's form): any on the server, or one brought over from your Mac, or from an iPad with Taildrop. |
+| [herdr-teleport](https://github.com/mrolafsson/herdr-teleport) | In the Herdr app: moves an agent to another machine, its conversation, branch and uncommitted work with it, and checks it all before the agent stops. `ctrl+t` on an agent in Recap teleports it, and `esc` there comes back. |
 
 - **Auto-discovery.** Each plugin asks herdr which others are installed and
   enabled. A link only appears when the plugin behind it is there; without
@@ -187,7 +188,7 @@ there is nothing to configure.
   following a link turns the open popup into the other plugin's, in place and
   without a flicker, and `esc` there brings you back to where you were.
 - **Shared look.** A title, a branch, a pull request and a key are
-  drawn the same in all six, in herdr's theme colours.
+  drawn the same in all seven, in herdr's theme colours.
 
 See [With the GitHub, Linear and Snooze plugins](#with-the-github-linear-and-snooze-plugins) for the keys and the convention behind it.
 

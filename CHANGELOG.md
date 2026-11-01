@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.12.8 - 2026-11-01
+
+- **Teleport's demo, from Recap's.** In the demo, `ctrl+t` opens
+  [herdr-teleport](https://github.com/mrolafsson/herdr-teleport)'s demo on
+  made-up machines, and touches nothing; the key shows in the demo even
+  with one machine connected.
+- **Teleport opens wider,** so what each of its steps did fits on its line.
+- **herdr-teleport is out,** and listed with the plugins Recap works with.
+
 ## 0.12.7 - 2026-11-01
 
 - **Linear issues open in the Linear mod.** With

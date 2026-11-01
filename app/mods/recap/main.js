@@ -44,7 +44,7 @@ function ticketKey(s) {
 // The herdr-recap this mod is part of (its release; the repo's tests hold it
 // to herdr-plugin.toml's version). It does the work on each machine with
 // agents: their sessions, recaps and titles, with the TUI plugin's cache.
-export const RECAP_VERSION = "0.12.7";
+export const RECAP_VERSION = "0.12.8";
 
 // Puts that release on a machine, once: into a folder of its own version, so
 // it never touches a herdr-recap installed for the TUI. The archive for the
@@ -242,14 +242,11 @@ export default class Recap extends View {
   }
 
   // Teleport's popup on this agent, in place of this one; esc there comes back.
+  // In the demo, Teleport's demo: its made-up machines, nothing touched.
   teleport(r, cx) {
     if (!r || !this.teleportable) return;
-    if (this.demo) {
-      this.unasked.reply = `Demo: ${r.name} would be teleported to another machine.`;
-      return cx.notify();
-    }
     this.dismiss();
-    openOverlay({ mod: "teleport", kind: "dialog", width: 560, height: 460, props: { address: r.address, back: "recap" } });
+    openOverlay({ mod: "teleport", kind: "dialog", width: 640, height: 460, props: { address: r.address, back: "recap", demo: this.demo || undefined } });
   }
 
   // A pull request: on its screen in the GitHub mod when that's installed,
@@ -963,7 +960,7 @@ export default class Recap extends View {
               .when(Boolean(sel), (el) => el.child(key(o, [], "rename", (cx) => this.startReply(sel, cx, "title"), "h-retitle")))
               .when(Boolean(sel?.pr?.url), (el) => el.child(key(o, ["^g"], "pull request", () => this.openPR(sel.pr), "h-pr")))
               .when(Boolean(sel?.issue?.url), (el) => el.child(key(o, ["^l"], "issue", () => this.openIssue(sel), "h-issue")))
-              .when(Boolean(sel && this.teleportable && machines().length > 1), (el) => el.child(key(o, ["^t"], "teleport", (cx) => this.teleport(sel, cx), "h-teleport")))
+              .when(Boolean(sel && this.teleportable && (this.demo || machines().length > 1)), (el) => el.child(key(o, ["^t"], "teleport", (cx) => this.teleport(sel, cx), "h-teleport")))
               .child(key(o, ["←", "→"], "stage", (cx) => (this.step(1), cx.notify()), "h-stage"))
               .child(key(o, ["esc"], "close", () => this.dismiss(), "h-close"))),
       );
