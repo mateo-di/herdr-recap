@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.12.5 - 2026-11-01
+
+- **Renaming an agent yourself is a click,** on the chosen card's title or
+  *rename* in the footer, with no key: the app's keys stay to ctrl and the
+  ones the TUI has.
+
 ## 0.12.4 - 2026-11-01
 
 - **Recaps and titles asked for from the Herdr app are written.** On Linux

@@ -44,7 +44,7 @@ function ticketKey(s) {
 // The herdr-recap this mod is part of (its release; the repo's tests hold it
 // to herdr-plugin.toml's version). It does the work on each machine with
 // agents: their sessions, recaps and titles, with the TUI plugin's cache.
-export const RECAP_VERSION = "0.12.4";
+export const RECAP_VERSION = "0.12.5";
 
 // Puts that release on a machine, once: into a folder of its own version, so
 // it never touches a herdr-recap installed for the TUI. The archive for the
@@ -198,7 +198,6 @@ export default class Recap extends View {
         } else if (c === "escape") this.replying ? this.endReply(cx) : this.dismiss();
         else if (c === "reply") this.startReply(sel, cx);
         else if (c === "rename") sel && this.rename(sel, cx);
-        else if (c === "retitle") sel && this.startReply(sel, cx, "title");
         else if (c === "ignore") sel && this.ignore(sel, cx);
         else if (c === "next" || c === "prev") (this.step(c === "next" ? 1 : -1), (this.at = 0));
         else if ([ALL, ...STAGES].some((s) => s.id === c)) (this.tab = c), (this.at = 0);
@@ -275,7 +274,7 @@ export default class Recap extends View {
     cx.notify();
   }
 
-  // A title you typed (⌘E, or a click on the title): /rename once the agent's between turns, and
+  // A title you typed (a click on the chosen card's title): /rename once the agent's between turns, and
   // a suggestion, if any, isn't offered again.
   retitle(address, title, cx) {
     if (this.demo) {
@@ -648,7 +647,7 @@ export default class Recap extends View {
             v_flex().flex_1().min_w(0).gap(6)
               .child(
                 h_flex().gap(8).items_center()
-                  // The chosen card's title: a click renames it (as ⌘E).
+                  // The chosen card's title: a click renames it (no key: a click it is).
                   .child(div().id(`ti-${r.address}`).min_w(0).truncate().text_size(14.5).font_semibold().text_color(o.fg)
                     .when(on, (el) => el.cursor_text().hover((s) => s.underline()).on_click((_e, cx) => {
                       cx.stop_propagation();
@@ -806,7 +805,6 @@ export default class Recap extends View {
         else if (k === "ctrl-g") this.open(sel?.pr?.url);
         else if (k === "ctrl-l") this.open(sel?.issue?.url);
         else if (k === "ctrl-r" && sel) this.rename(sel, cx);
-        else if (k === "cmd-e" && sel) this.startReply(sel, cx, "title");
         else if (k === "ctrl-x" && sel?.suggested) this.ignore(sel, cx);
         else return;
         cx.stop_propagation();
@@ -869,7 +867,7 @@ export default class Recap extends View {
                   .child(key(o, ["^x"], "ignore", (cx) => this.ignore(sel, cx), "h-ignore")))
               .when(Boolean(sel && !sel.suggested && !sel.renaming && !sel.asking), (el) =>
                 el.child(key(o, ["^r"], "suggest a title", (cx) => this.rename(sel, cx), "h-suggest")))
-              .when(Boolean(sel), (el) => el.child(key(o, ["⌘E"], "rename", (cx) => this.startReply(sel, cx, "title"), "h-retitle")))
+              .when(Boolean(sel), (el) => el.child(key(o, [], "rename", (cx) => this.startReply(sel, cx, "title"), "h-retitle")))
               .when(Boolean(sel?.pr?.url), (el) => el.child(key(o, ["^g"], "pull request", () => this.open(sel.pr.url), "h-pr")))
               .when(Boolean(sel?.issue?.url), (el) => el.child(key(o, ["^l"], "issue", () => this.open(sel.issue.url), "h-issue")))
               .child(key(o, ["←", "→"], "stage", (cx) => (this.step(1), cx.notify()), "h-stage"))

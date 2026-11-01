@@ -73,7 +73,7 @@ chips. JetBrains Mono for branches, machines and keys.
 
 `cmd-r` opens it. In it: `tab` replies, `escape` leaves a reply before it
 closes the popup, `ctrl-r` takes a suggested title, or asks for one now (`herdr-recap
-title`, in the background), `ctrl-x` turns it down, and `cmd-e` renames
-the agent to a title you type.
+title`, in the background), `ctrl-x` turns it down, and a click on the
+chosen agent's title renames it to a title you type.
 `recap.demo` (with `herdr-app do`, while it's open) switches to made-up
 agents for that opening.
