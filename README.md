@@ -251,8 +251,8 @@ the line under the title, with *Rename · Ignore* after it:
 ![Two agents with a better title suggested under their own, one being renamed once it's done working, and two already renamed, their ticket's key first](docs/images/titles.png)
 
 A title is poor when there isn't one (*Claude Code*), when it's a slug (what
-`/rename` makes up: `fix-channelless-assignment-notify`), or when it leaves
-out the ticket its branch is for (`…-act-1921-…`). The suggestion comes from
+`/rename` makes up: `fix-missing-share-notify`), or when it leaves
+out the ticket its branch is for (`…-hal-1921-…`). The suggestion comes from
 the same fork of the conversation as the recap, so it knows the work and its
 ticket; it's asked for once per session and kept from recap to recap.
 
@@ -265,8 +265,8 @@ for good.
 
 The agent's space is renamed with it, as `prefix+W` would, when the agent is
 the only one in it and the space's name is only a stand-in: its folder's, its
-repo's, its branch's, or the agent's old title. The line says so: *→ ACT-1921
-Activation Email for New Users (and its space)*. A space you named yourself,
+repo's, its branch's, or the agent's old title. The line says so: *→ HAL-1921
+Offline Edits Survive a Conflict (and its space)*. A space you named yourself,
 or one shared with other agents, keeps its name.
 
 On a row with nothing suggested, `ctrl+r` asks for a title there and then,

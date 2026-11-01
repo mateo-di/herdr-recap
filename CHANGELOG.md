@@ -6,7 +6,7 @@
   recap of Claude agents named by their process rather than a herdr pane,
   and with `--write` writes the out-of-date ones in the background. The
   Herdr app runs its agents in herdr-core, which herdr doesn't see, and
-  [mods-recap](https://github.com/mrolafsson/mods-recap) uses this to show
+  [herdr-mods-recap](https://github.com/mrolafsson/herdr-mods-recap) uses this to show
   their recaps there. Recaps are shared with this plugin's.
 
 ## 0.10.1 - 2026-10-21
@@ -144,9 +144,9 @@ Recaps for other agents. `agents` in `config.json` lists the ones recapped,
 ## 0.5.0 - 2026-10-10
 
 - **Better titles, suggested with the recap.** An agent with no title, a slug
-  for one (`fix-channelless-assignment-notify`) or one that leaves out its
-  branch's ticket has a better one on the line under it, such as *ACT-1921
-  Activation Email for New Users*, followed by *Rename · Ignore*. *Rename*
+  for one (`fix-missing-share-notify`) or one that leaves out its
+  branch's ticket has a better one on the line under it, such as *HAL-1921
+  Offline Edits Survive a Conflict*, followed by *Rename · Ignore*. *Rename*
   (a click, or `ctrl+r`) types `/rename` into the agent, once it's between
   turns, and the row says *Renaming to …* until its title shows it. *Ignore*
   (a click, or `ctrl+x`) drops the suggestion for good. It's asked for once

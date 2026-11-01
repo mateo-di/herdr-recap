@@ -10,14 +10,14 @@ import (
 
 func TestTicketKey(t *testing.T) {
 	for branch, want := range map[string]string{
-		"mrolafsson-act-1921-users-that-are-immediately-activated": "ACT-1921",
-		"mrolafsson/the-30-invitations-can-be-reissued":            "THE-30",
-		"ACT-7":                                  "ACT-7",
-		"fix/checkout-flake":                     "",
-		"main":                                   "",
-		"project-phase-0-substrate-c2c2de2dae78": "",
-		"phase-2-web-88-rate-limits":             "WEB-88",
-		"release-3":                              "",
+		"sam-hal-1921-search-drops-accents":        "HAL-1921",
+		"sam/ops-30-retry-failed-pushes":           "OPS-30",
+		"HAL-7":                                    "HAL-7",
+		"fix/checkout-flake":                       "",
+		"main":                                     "",
+		"project-phase-0-substrate-c2c2de2dae78":   "",
+		"phase-2-web-88-rate-limits":               "WEB-88",
+		"release-3":                                "",
 		"project-morning-brief-update-689e9d59115": "",
 		"": "",
 	} {
@@ -34,12 +34,12 @@ func TestPoorTitle(t *testing.T) {
 	}{
 		{"", "main", true},
 		{"Claude Code", "main", true},
-		{"fix-channelless-assignment-notify", "main", true},
+		{"fix-missing-share-notify", "main", true},
 		{"review_merge_before_push", "main", true},
-		{"Sensor improvements", "project-sensors-overhaul-3b30ce3f1ec4", false},
+		{"Search improvements", "project-search-overhaul-3b30ce3f1ec4", false},
 		{"scratch", "main", false},
-		{"PR 2 voices", "mrolafsson-act-1870-review-jira-sensors", true},
-		{"act-1870 Jira sensors on a par", "mrolafsson-act-1870-review-jira-sensors", false},
+		{"PR 2 voices", "sam-hal-1870-review-sync-retries", true},
+		{"hal-1870 Sync retries on a par", "sam-hal-1870-review-sync-retries", false},
 		{"Phase 0 substrate", "project-phase-0-substrate-c2c2de2dae78", false},
 	} {
 		if got := poorTitle(c.title, c.branch); got != c.poor {
@@ -53,10 +53,10 @@ func TestParseTitle(t *testing.T) {
 		return []byte(`{"type":"result","is_error":false,"result":"` + s + `","total_cost_usd":0.01}`)
 	}
 	for in, want := range map[string]string{
-		"ACT-1921 Activation Email for New Users":    "ACT-1921 Activation Email for New Users",
-		`\"ACT-1921  Activation Email\"\n`:           "ACT-1921 Activation Email",
-		"**Fix the Flaky Checkout Test.**":           "Fix the Flaky Checkout Test",
-		`Here is a name:\nACT-1921 Activation Email`: "",
+		"HAL-1921 Search Drops Accents in Titles":  "HAL-1921 Search Drops Accents in Titles",
+		`\"HAL-1921  Search Accents\"\n`:           "HAL-1921 Search Accents",
+		"**Fix the Flaky Checkout Test.**":         "Fix the Flaky Checkout Test",
+		`Here is a name:\nHAL-1921 Search Accents`: "",
 		"/clear": "",
 		"":       "",
 		"A title that goes on and on " + strings.Repeat("and on ", 8): "",
@@ -95,7 +95,7 @@ func withTitles(t *testing.T, reply string) (recaps, titles *int) {
 	return recaps, titles
 }
 
-const titleReply = `{"type":"result","is_error":false,"result":"ACT-12 Fix the Login Bug","total_cost_usd":0.004}`
+const titleReply = `{"type":"result","is_error":false,"result":"HAL-12 Fix the Login Bug","total_cost_usd":0.004}`
 
 func appendTo(t *testing.T, path, text string) {
 	t.Helper()
@@ -114,7 +114,7 @@ func TestAPoorTitleGetsABetterOneWithItsRecapOnce(t *testing.T) {
 	s := testSessionWith(t, "one\n")
 	cfg := withDefaults(config{})
 	r, _, err := ensureRecap(context.Background(), cfg, s, "fix-login-bug", false)
-	if err != nil || r.Title != "ACT-12 Fix the Login Bug" || r.Text == "" || *titles != 1 {
+	if err != nil || r.Title != "HAL-12 Fix the Login Bug" || r.Text == "" || *titles != 1 {
 		t.Fatalf("%+v %v, %d titles", r, err, *titles)
 	}
 	if got, want := r.CostUSD, 0.0166+0.004; got < want-1e-9 || got > want+1e-9 {
@@ -123,7 +123,7 @@ func TestAPoorTitleGetsABetterOneWithItsRecapOnce(t *testing.T) {
 	// The conversation moves on: a new recap, the same suggestion.
 	appendTo(t, s.Transcript, "two\n")
 	r, _, _ = ensureRecap(context.Background(), cfg, s, "fix-login-bug", false)
-	if *recaps != 2 || *titles != 1 || r.Title != "ACT-12 Fix the Login Bug" {
+	if *recaps != 2 || *titles != 1 || r.Title != "HAL-12 Fix the Login Bug" {
 		t.Errorf("%d recaps, %d titles, %+v", *recaps, *titles, r)
 	}
 	// Turned down, it stays turned down.
@@ -169,15 +169,15 @@ func TestARenameDoesntPutARecapOutOfDate(t *testing.T) {
 		t.Fatal(err)
 	}
 	// What /rename writes, and Claude's note to itself about it.
-	appendTo(t, s.Transcript, `{"type":"custom-title","customTitle":"ACT-12 Fix the Login Bug","sessionId":"x"}
-{"type":"agent-name","agentName":"ACT-12 Fix the Login Bug","sessionId":"x"}
+	appendTo(t, s.Transcript, `{"type":"custom-title","customTitle":"HAL-12 Fix the Login Bug","sessionId":"x"}
+{"type":"agent-name","agentName":"HAL-12 Fix the Login Bug","sessionId":"x"}
 {"type":"system","subtype":"local_command","content":"<command-name>/rename</command-name>"}
 {"type":"user","isMeta":true,"message":{"role":"user","content":"<system-reminder>The user named this session</system-reminder>"}}
 `)
 	if _, current := (liveSource{cfg}).cached(s); !current {
 		t.Error("a rename put the recap out of date")
 	}
-	if _, ran, _ := ensureRecap(context.Background(), cfg, s, "ACT-12 Fix the Login Bug", false); ran || *recaps != 1 {
+	if _, ran, _ := ensureRecap(context.Background(), cfg, s, "HAL-12 Fix the Login Bug", false); ran || *recaps != 1 {
 		t.Errorf("recapped again after a rename: %d", *recaps)
 	}
 	// Something said is another matter.
@@ -193,13 +193,13 @@ func TestATitleAskedForReplacesOneTurnedDown(t *testing.T) {
 	cfg := withDefaults(config{})
 	// With no recap yet, the title is kept for the one to come.
 	r, err := ensureTitle(context.Background(), cfg, s, "Fix login")
-	if err != nil || r.Title != "ACT-12 Fix the Login Bug" || r.Text != "" {
+	if err != nil || r.Title != "HAL-12 Fix the Login Bug" || r.Text != "" {
 		t.Fatalf("%+v %v", r, err)
 	}
 	if _, current := (liveSource{cfg}).cached(s); current {
 		t.Error("a title alone counts as a recap")
 	}
-	if r, _, _ := ensureRecap(context.Background(), cfg, s, "Fix login", false); r.Title != "ACT-12 Fix the Login Bug" || r.Text == "" {
+	if r, _, _ := ensureRecap(context.Background(), cfg, s, "Fix login", false); r.Title != "HAL-12 Fix the Login Bug" || r.Text == "" {
 		t.Errorf("%+v", r)
 	}
 	_ = settleTitle(s.ID)
@@ -246,7 +246,7 @@ func TestARenameAskedOfABusyAgentIsGivenWhenItsDone(t *testing.T) {
 	now("done", 8)
 	_ = tick(cfg)
 	_ = tick(cfg)
-	if len(typed) != 1 || typed[0] != "w1:p1: /rename ACT-12 Fix the Login Bug" {
+	if len(typed) != 1 || typed[0] != "w1:p1: /rename HAL-12 Fix the Login Bug" {
 		t.Errorf("typed %q", typed)
 	}
 	if r := loadRecap(s.ID); r.Renaming || !r.Settled || renamePending("w1:p1") {
@@ -291,12 +291,12 @@ func TestARenameIsShownWhereAPluginReportsTitles(t *testing.T) {
 	// A plugin's title, read from the transcript at the next turn: the new
 	// one is shown now.
 	rename("Fix login")
-	if len(reported) != 1 || reported[0] != "w1:p1 claude: ACT-12 Fix the Login Bug" {
+	if len(reported) != 1 || reported[0] != "w1:p1 claude: HAL-12 Fix the Login Bug" {
 		t.Errorf("reported %q", reported)
 	}
 	// Already showing it: nothing to report.
 	reported = nil
-	rename("ACT-12 Fix the Login Bug")
+	rename("HAL-12 Fix the Login Bug")
 	if len(reported) != 0 {
 		t.Errorf("reported %q", reported)
 	}

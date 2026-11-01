@@ -20,8 +20,8 @@ import (
 // ticket it's for. It's only suggested: the popup shows it under the title,
 // and renames the agent (Claude's /rename) when you say so, or drops it.
 
-// ticketPattern is a ticket's key in a branch name: act-1921 in
-// mrolafsson-act-1921-users-get-no-email.
+// ticketPattern is a ticket's key in a branch name: hal-1921 in
+// sam-hal-1921-offline-edits-lost.
 var ticketPattern = regexp.MustCompile(`(?i)(?:^|[^a-z0-9])([a-z][a-z0-9]{1,9})-([1-9][0-9]{0,5})(?:[^a-z0-9]|$)`)
 
 // notTickets are words a number follows in a branch name without making a
@@ -34,7 +34,7 @@ var notTickets = map[string]bool{
 }
 
 // ticketKey is the ticket a branch is for, as its tracker writes it
-// (ACT-1921), or "".
+// (HAL-1921), or "".
 func ticketKey(branch string) string {
 	for rest := branch; rest != ""; {
 		m := ticketPattern.FindStringSubmatchIndex(rest)
@@ -51,7 +51,7 @@ func ticketKey(branch string) string {
 
 // poorTitle: a title worth replacing. None at all (Claude Code's own name
 // for a session it hasn't titled), a slug (what /rename makes up:
-// fix-channelless-assignment-notify), or one that doesn't say the ticket its
+// fix-missing-share-notify), or one that doesn't say the ticket its
 // branch is for.
 func poorTitle(title, branch string) bool {
 	t := strings.TrimSpace(title)
@@ -81,7 +81,7 @@ func titlePrompt(title, branch string) string {
 	return "Suggest a name for this session, for a list of sessions. " + current +
 		" Answer with the name alone on one line: no quotes, no explanation, and don't use any tools." +
 		" At most six words and " + fmt.Sprint(maxTitleWidth) + " characters, in Title Case, saying what the work is as a whole rather than its latest step." +
-		" If the work is for a ticket, start with the ticket's key in capitals, like ACT-1921." + on +
+		" If the work is for a ticket, start with the ticket's key in capitals, like HAL-1921." + on +
 		" If the current name is already right, answer with it unchanged."
 }
 

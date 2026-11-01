@@ -72,9 +72,9 @@ func TestGitBranch(t *testing.T) {
 	}
 	// A worktree: .git is a file naming the real git dir.
 	wt, gd := t.TempDir(), t.TempDir()
-	write(t, filepath.Join(gd, "HEAD"), "ref: refs/heads/act-1638\n")
+	write(t, filepath.Join(gd, "HEAD"), "ref: refs/heads/hal-1638\n")
 	write(t, filepath.Join(wt, ".git"), "gitdir: "+gd+"\n")
-	if got := gitBranch(wt); got != "act-1638" {
+	if got := gitBranch(wt); got != "hal-1638" {
 		t.Errorf("worktree: %q", got)
 	}
 	write(t, filepath.Join(repo, ".git", "HEAD"), "4f2a9c1e\n")

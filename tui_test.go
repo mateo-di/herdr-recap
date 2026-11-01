@@ -1111,8 +1111,8 @@ func TestSameName(t *testing.T) {
 	}{
 		{"herdr-recap", "herdr-recap", true},
 		{"worktree-security-review", "Worktree Security Review", true},
-		{"ACT-1870 Review Jira ecosystem sensors and ensu…", "ACT-1870 Review Jira ecosystem sensors and ensure are on a par", true},
-		{"Voice-first Action", "project-voice-first-action-87df7e8438b3", false},
+		{"HAL-1870 Review sync retry backoff and make it…", "HAL-1870 Review sync retry backoff and make it match the server", true},
+		{"Voice-first Notes", "project-voice-first-notes-87df7e8438b3", false},
 		{"Docs", "Docs and more", false},
 		{"Do…", "Docs and more", false},
 		{"", "", false},
