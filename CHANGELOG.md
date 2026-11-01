@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.11.0 - 2026-11-01
 
 - **Recaps for the Herdr app.** `herdr-recap sessions` gives the session and
   recap of Claude agents named by their process rather than a herdr pane,
