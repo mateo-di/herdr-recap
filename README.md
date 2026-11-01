@@ -114,10 +114,16 @@ have.
 
 ## In the Herdr app
 
-The app's Recap is a mod: the same recaps, freshness and titles as the
-TUI's popup, by the same herdr-recap, in a popup designed for the app.
-Every agent on every machine the app is connected to is in one list, and
-Enter goes to an agent wherever it runs.
+The Herdr app runs agents on every machine it's connected to, which is
+exactly when coming back to them gets hard: which one is waiting on you,
+on which machine, and what was it doing? Recap puts every one of them in one
+popup (⌘R), the ones that need you first, each with a sentence on where it
+got to and the question it's waiting on. Reply from the popup, or press
+Enter to land in the agent's terminal wherever it runs; nothing to install
+on any machine.
+
+It's a mod: the same recaps, freshness and titles as the TUI's popup, by the
+same herdr-recap, in a popup designed for the app.
 
 ![Replying to an agent from the app's Recap: Tab, type, Enter](docs/images/app-reply.png)
 

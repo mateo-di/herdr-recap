@@ -1,7 +1,25 @@
 # Recap
 
-Every agent on every machine the Herdr app is connected to, in one popup,
-grouped by whose move it is, each with a recap of where it got to.
+**Come back to a dozen agents and know in seconds which ones need you.**
+
+Starting agents is easy; coming back to them is the hard part: which one is
+waiting on you, which finished, what each was even doing. Recap answers that
+in one popup (⌘R) for every agent on every machine the Herdr app is connected
+to:
+
+- **Where each one got to,** in a sentence: Claude Code's own recap,
+  written in the background while you're away, so it's ready when you look.
+- **Whose move it is.** Needs you, done, needs fixing, working, in review,
+  merged: the agents waiting on you come first, with the question they're
+  asking right on the card.
+- **Act without hunting for the terminal.** Reply to an agent from the
+  popup, or press Enter to jump to it on whichever machine it runs.
+- **Everything around the work at a glance:** its branch, uncommitted and
+  unpushed changes, task progress, pull request and Linear issue.
+- **Names that say what the work is.** Agents stuck with a slug for a title
+  get a better one suggested, with their ticket's key, taken with a key.
+- **Nothing else to install,** and cheap: a recap is only written when one
+  is out of date, and shared with herdr-recap's TUI popup if you use both.
 
 ## What it is
 
