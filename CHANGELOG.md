@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.12.7 - 2026-11-01
+
+- **Linear issues open in the Linear mod.** With
+  [herdr-linear](https://github.com/mrolafsson/herdr-linear)'s mod in the
+  Herdr app, a click on an agent's issue, or `ctrl+l`, opens it there on its
+  screen: change its status, open its worktree or start it. `esc` comes
+  back to Recap. In the demo too.
+
 ## 0.12.6 - 2026-11-01
 
 - **Pull requests open in the GitHub mod.** With

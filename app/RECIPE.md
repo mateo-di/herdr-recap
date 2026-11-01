@@ -59,7 +59,8 @@ Optional, for pull requests and Linear issues on the cards: herdr-github
 and herdr-linear where the person is signed in to GitHub and Linear,
 either fetched by their own app mods or in `~/.local/bin`. With the GitHub
 mod (github.com/mrolafsson/herdr-github/tree/main/app) installed, a
-pull request opens in it. Mention them; don't install them unasked.
+pull request opens in it; with the Linear mod
+(github.com/mrolafsson/herdr-linear/tree/main/app), an issue does. Mention them; don't install them unasked.
 
 To see that it works: open it (⌘R). The first opening on a machine takes a
 few seconds longer while herdr-recap is fetched; afterwards it's in
@@ -88,9 +89,9 @@ fetch herdr-recap onto, is named in a line under the list with why.
   agent's terminal, and `hc send` to type a reply into an agent.
 - With herdr-github and herdr-linear where you're signed in (the copy
   their app mod fetched, else `~/.local/bin`), it shows each agent's pull
-  request and Linear issue (`prs`, `issues`). With the GitHub mod
-  installed, a pull request opens in it (`openOverlay`, `back: "recap"`),
-  else in the browser.
+  request and Linear issue (`prs`, `issues`). With the GitHub or Linear
+  mod installed, a pull request or issue opens in it (`openOverlay`,
+  `back: "recap"`), else in the browser.
 - Reads and writes `recap-cache.json` in the app's home, to show what it
   knew at once on opening.
 

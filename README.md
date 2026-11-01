@@ -140,7 +140,9 @@ herdr-linear are where you're signed in: their own app mods (which fetch
 them), or their TUI plugins in `~/.local/bin`. With
 [herdr-github](https://github.com/mrolafsson/herdr-github)'s GitHub mod
 installed, a pull request opens there, on its screen (merge it, open its
-worktree), and `esc` comes back.
+worktree), and `esc` comes back; with
+[herdr-linear](https://github.com/mrolafsson/herdr-linear)'s Linear mod, an
+issue opens there (change its status, start it).
 
 Its keys come from its `keys.json`, merged into the app's:
 
@@ -154,7 +156,7 @@ Its keys come from its `keys.json`, merged into the app's:
 | `ctrl+r` | rename it to the title suggested under its own; with none suggested, ask for one |
 | `ctrl+x` | ignore the suggested title: it isn't offered again |
 | click on its title, or *rename* | rename it yourself: its title, to edit; `enter` renames once it's between turns |
-| `ctrl+g` / `ctrl+l`, click | open its pull request (in the GitHub mod, when it's installed) / Linear issue |
+| `ctrl+g` / `ctrl+l`, click | open its pull request / Linear issue: in the GitHub / Linear mod when it's installed, else the browser |
 | `esc` | close |
 
 With it open, `herdr-app do recap.demo` shows made-up agents instead, for a

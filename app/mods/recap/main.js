@@ -44,7 +44,7 @@ function ticketKey(s) {
 // The herdr-recap this mod is part of (its release; the repo's tests hold it
 // to herdr-plugin.toml's version). It does the work on each machine with
 // agents: their sessions, recaps and titles, with the TUI plugin's cache.
-export const RECAP_VERSION = "0.12.6";
+export const RECAP_VERSION = "0.12.7";
 
 // Puts that release on a machine, once: into a folder of its own version, so
 // it never touches a herdr-recap installed for the TUI. The archive for the
@@ -150,10 +150,12 @@ export default class Recap extends View {
     // With herdr-github's mod installed, a pull request opens there (on its
     // screen, esc coming back here) rather than in the browser.
     this.github = false;
+    this.linear = false;
     cx.spawn(async (cx) => {
       const has = async (mod) => (await fs.readFile(`${appHome()}/mods/${mod}/main.js`, "utf8").catch(() => null)) !== null;
       this.teleportable = await has("teleport");
       this.github = await has("github");
+      this.linear = await has("linear");
       cx.notify();
     });
     // Each agent's terminal as the core describes it (its Claude process, its
@@ -258,6 +260,16 @@ export default class Recap extends View {
     this.dismiss();
     // The demo's pull requests are the GitHub mod's demo's: it opens on them there.
     openOverlay({ mod: "github", kind: "dialog", width: 0.8, height: 0.8, props: { pr: { host: m[1], repo: m[2], number: Number(m[3]) }, back: "recap", demo: this.demo || undefined } });
+  }
+
+  // A Linear issue: on its screen in the Linear mod when that's installed,
+  // else in the browser.
+  openIssue(r) {
+    const url = r?.issue?.url;
+    const m = /^https:\/\/linear\.app\/([^/]+)\/issue\/([A-Za-z][A-Za-z0-9_]*-\d+)/.exec(url ?? "");
+    if (!this.linear || !m) return this.open(url);
+    this.dismiss();
+    openOverlay({ mod: "linear", kind: "dialog", width: 0.8, height: 0.8, props: { issue: { key: m[2], workspaceKey: m[1] }, back: "recap", demo: this.demo || undefined } });
   }
 
   open(url) {
@@ -638,7 +650,7 @@ export default class Recap extends View {
     if (r.ticket) {
       const url = r.issue?.url;
       out.push(chip(o, id("is"), [icon(issueIcon(r.issue), o.accent, 13), div().font_semibold().child(r.ticket), r.issue?.state ?? null],
-        { color: o.accent, click: url ? () => this.open(url) : null }));
+        { color: o.accent, click: url ? () => this.openIssue(r) : null }));
     }
     if (pr) {
       const look = prLook(o, pr);
@@ -845,7 +857,7 @@ export default class Recap extends View {
         else if (k === "left" && !this.filter) (this.step(-1), (this.at = 0));
         else if (k === "tab") this.startReply(sel, cx);
         else if (k === "ctrl-g") this.openPR(sel?.pr);
-        else if (k === "ctrl-l") this.open(sel?.issue?.url);
+        else if (k === "ctrl-l") this.openIssue(sel);
         else if (k === "ctrl-t") this.teleport(sel, cx);
         else if (k === "ctrl-r" && sel) this.rename(sel, cx);
         else if (k === "ctrl-x" && sel?.suggested) this.ignore(sel, cx);
@@ -912,7 +924,7 @@ export default class Recap extends View {
                 el.child(key(o, ["^r"], "suggest a title", (cx) => this.rename(sel, cx), "h-suggest")))
               .when(Boolean(sel), (el) => el.child(key(o, [], "rename", (cx) => this.startReply(sel, cx, "title"), "h-retitle")))
               .when(Boolean(sel?.pr?.url), (el) => el.child(key(o, ["^g"], "pull request", () => this.openPR(sel.pr), "h-pr")))
-              .when(Boolean(sel?.issue?.url), (el) => el.child(key(o, ["^l"], "issue", () => this.open(sel.issue.url), "h-issue")))
+              .when(Boolean(sel?.issue?.url), (el) => el.child(key(o, ["^l"], "issue", () => this.openIssue(sel), "h-issue")))
               .when(Boolean(sel && this.teleportable && machines().length > 1), (el) => el.child(key(o, ["^t"], "teleport", (cx) => this.teleport(sel, cx), "h-teleport")))
               .child(key(o, ["←", "→"], "stage", (cx) => (this.step(1), cx.notify()), "h-stage"))
               .child(key(o, ["esc"], "close", () => this.dismiss(), "h-close"))),
