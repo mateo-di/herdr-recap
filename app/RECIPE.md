@@ -1,6 +1,8 @@
 # Recap
 
-**Come back to a dozen agents and know in seconds which ones need you.**
+Come back to a dozen agents and know in seconds which ones need you. Recap lists every agent on every machine Herdr is connected to, grouped by whose move it is, each with a one-line recap of where it got to, written in the background while you were away. Read the question a blocked agent is asking and reply right from the list, jump to any agent wherever it runs, and see its branch, unpushed work, tasks, pull request and Linear issue at a glance.
+
+![Recap](preview.png)
 
 Starting agents is easy; coming back to them is the hard part: which one is
 waiting on you, which finished, what each was even doing. Recap answers that
