@@ -136,7 +136,11 @@ herdr-recap installed for the TUI. Both read and write the same recaps
 neither pays for a recap the other already wrote.
 
 **Pull requests and Linear issues** show on its cards when herdr-github and
-herdr-linear are installed where you're signed in.
+herdr-linear are where you're signed in: their own app mods (which fetch
+them), or their TUI plugins in `~/.local/bin`. With
+[herdr-github](https://github.com/mrolafsson/herdr-github)'s GitHub mod
+installed, a pull request opens there, on its screen (merge it, open its
+worktree), and `esc` comes back.
 
 Its keys come from its `keys.json`, merged into the app's:
 
@@ -150,7 +154,7 @@ Its keys come from its `keys.json`, merged into the app's:
 | `ctrl+r` | rename it to the title suggested under its own; with none suggested, ask for one |
 | `ctrl+x` | ignore the suggested title: it isn't offered again |
 | click on its title, or *rename* | rename it yourself: its title, to edit; `enter` renames once it's between turns |
-| `ctrl+g` / `ctrl+l`, click | open its pull request / Linear issue |
+| `ctrl+g` / `ctrl+l`, click | open its pull request (in the GitHub mod, when it's installed) / Linear issue |
 | `esc` | close |
 
 With it open, `herdr-app do recap.demo` shows made-up agents instead, for a

@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.12.6 - 2026-11-01
+
+- **Pull requests open in the GitHub mod.** With
+  [herdr-github](https://github.com/mrolafsson/herdr-github)'s mod in the
+  Herdr app, a click on an agent's pull request, or `ctrl+g`, opens it
+  there on its screen, to merge it or open its worktree; `esc` comes back
+  to Recap. Without it, the browser as before. Pull requests come from the
+  herdr-github the GitHub mod fetched, when there's no TUI install.
+
+- **Teleport an agent from the list.** With
+  [herdr-teleport](https://github.com/mrolafsson/herdr-teleport)'s mod in
+  the Herdr app, `ctrl+t` (or *teleport* in the footer) moves the chosen
+  agent to another machine: its conversation, branch and uncommitted work
+  go with it. `esc` in Teleport comes back to Recap.
+
 ## 0.12.5 - 2026-11-01
 
 - **Renaming an agent yourself is a click,** on the chosen card's title or

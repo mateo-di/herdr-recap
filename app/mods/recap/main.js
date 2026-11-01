@@ -11,7 +11,7 @@
 import { View, div } from "gpui-kit";
 import * as fs from "fs/promises";
 import { v_flex, h_flex, InputState, Input } from "gpui-base";
-import { agents, machines, spaces, run, exec, hc, theme, appHome, props, closeOverlay, nextCommand, window } from "herdr";
+import { agents, machines, spaces, run, exec, hc, theme, appHome, props, closeOverlay, openOverlay, nextCommand, window } from "herdr";
 import { demoRows } from "./demo.js";
 import { tones, tint, STAGES, ALL, stageOf, stateIcon, stageColor, icon, prLook, issueIcon, chip, bar, duration, words, key, MONO } from "./look.js";
 
@@ -44,7 +44,7 @@ function ticketKey(s) {
 // The herdr-recap this mod is part of (its release; the repo's tests hold it
 // to herdr-plugin.toml's version). It does the work on each machine with
 // agents: their sessions, recaps and titles, with the TUI plugin's cache.
-export const RECAP_VERSION = "0.12.5";
+export const RECAP_VERSION = "0.12.6";
 
 // Puts that release on a machine, once: into a folder of its own version, so
 // it never touches a herdr-recap installed for the TUI. The archive for the
@@ -90,8 +90,16 @@ function recapBinary(machine) {
 // Runs a program on a machine (null: this one): herdr-recap, the mod's own;
 // herdr-github and herdr-linear, where they're installed.
 async function tool(name, args, machine) {
-  const path = name === "herdr-recap" ? await recapBinary(machine) : `$HOME/.local/bin/${name}`;
-  const r = await exec("sh", ["-c", `exec "${path}" "$@"`, "sh", ...args], { on: machine });
+  if (name === "herdr-recap") {
+    const path = await recapBinary(machine);
+    const r = await exec("sh", ["-c", 'exec "$0" "$@"', path, ...args], { on: machine });
+    if (r.code !== 0) throw new Error(r.stderr.trim().split("\n").pop() || `${name}: exit ${r.code}`);
+    return JSON.parse(r.stdout);
+  }
+  // herdr-github and herdr-linear: the copy their app mod fetched (the newest),
+  // else the one installed for the TUI.
+  const find = `for b in $(ls -d "$HOME/.local/share/${name}/app/"*/${name} 2>/dev/null | sort -V -r) "$HOME/.local/bin/${name}"; do [ -x "$b" ] && exec "$b" "$@"; done; echo "${name} isn't installed" >&2; exit 127`;
+  const r = await exec("sh", ["-c", find, "sh", ...args], { on: machine });
   if (r.code !== 0) throw new Error(r.stderr.trim().split("\n").pop() || `${name}: exit ${r.code}`);
   return JSON.parse(r.stdout);
 }
@@ -136,6 +144,18 @@ export default class Recap extends View {
     });
     this.unasked = {};
     this.lookedUp = 0;
+    // With herdr-teleport's mod installed, ctrl+t moves the chosen agent to
+    // another machine (in Teleport's popup, which comes back here on esc).
+    this.teleportable = false;
+    // With herdr-github's mod installed, a pull request opens there (on its
+    // screen, esc coming back here) rather than in the browser.
+    this.github = false;
+    cx.spawn(async (cx) => {
+      const has = async (mod) => (await fs.readFile(`${appHome()}/mods/${mod}/main.js`, "utf8").catch(() => null)) !== null;
+      this.teleportable = await has("teleport");
+      this.github = await has("github");
+      cx.notify();
+    });
     // Each agent's terminal as the core describes it (its Claude process, its
     // folder, when its status changed, Claude's own word), by address: asked
     // for with `hc get` off the UI thread rather than terminals() on every draw.
@@ -199,6 +219,7 @@ export default class Recap extends View {
         else if (c === "reply") this.startReply(sel, cx);
         else if (c === "rename") sel && this.rename(sel, cx);
         else if (c === "ignore") sel && this.ignore(sel, cx);
+        else if (c === "teleport") this.teleport(sel, cx);
         else if (c === "next" || c === "prev") (this.step(c === "next" ? 1 : -1), (this.at = 0));
         else if ([ALL, ...STAGES].some((s) => s.id === c)) (this.tab = c), (this.at = 0);
         cx.notify();
@@ -216,6 +237,26 @@ export default class Recap extends View {
     this.dismiss();
     if (this.demo) return;
     run("agent.focus", { terminal: r.address });
+  }
+
+  // Teleport's popup on this agent, in place of this one; esc there comes back.
+  teleport(r, cx) {
+    if (!r || !this.teleportable) return;
+    if (this.demo) {
+      this.unasked.reply = `Demo: ${r.name} would be teleported to another machine.`;
+      return cx.notify();
+    }
+    this.dismiss();
+    openOverlay({ mod: "teleport", kind: "dialog", width: 560, height: 460, props: { address: r.address, back: "recap" } });
+  }
+
+  // A pull request: on its screen in the GitHub mod when that's installed,
+  // else in the browser.
+  openPR(pr) {
+    const m = /^https:\/\/([^/]+)\/([^/]+\/[^/]+)\/pull\/(\d+)/.exec(pr?.url ?? "");
+    if (!this.github || !m || this.demo) return this.open(pr?.url);
+    this.dismiss();
+    openOverlay({ mod: "github", kind: "dialog", width: 0.8, height: 0.8, props: { pr: { host: m[1], repo: m[2], number: Number(m[3]) }, back: "recap" } });
   }
 
   open(url) {
@@ -603,7 +644,7 @@ export default class Recap extends View {
       const what = pr.state === "draft" || pr.state === "merged" || pr.state === "closed" ? pr.state
         : pr.conflicts ? "conflicts" : pr.review === "changes requested" ? "changes" : pr.review === "approved" ? "approved" : null;
       out.push(chip(o, id("pr"), [icon(look.icon, look.color, 13), div().font_semibold().child(`#${pr.number}`), pr.checks ?? null, what],
-        { color: look.color, click: pr.url ? () => this.open(pr.url) : null }));
+        { color: look.color, click: pr.url ? () => this.openPR(pr) : null }));
       if (/\bqueued\b/.test(pr.badge ?? "")) out.push(chip(o, id("q"), [icon("queue", o.accent, 13), "queued"], { color: o.accent }));
     }
     return out;
@@ -802,8 +843,9 @@ export default class Recap extends View {
         else if (k === "right" && !this.filter) (this.step(1), (this.at = 0));
         else if (k === "left" && !this.filter) (this.step(-1), (this.at = 0));
         else if (k === "tab") this.startReply(sel, cx);
-        else if (k === "ctrl-g") this.open(sel?.pr?.url);
+        else if (k === "ctrl-g") this.openPR(sel?.pr);
         else if (k === "ctrl-l") this.open(sel?.issue?.url);
+        else if (k === "ctrl-t") this.teleport(sel, cx);
         else if (k === "ctrl-r" && sel) this.rename(sel, cx);
         else if (k === "ctrl-x" && sel?.suggested) this.ignore(sel, cx);
         else return;
@@ -868,8 +910,9 @@ export default class Recap extends View {
               .when(Boolean(sel && !sel.suggested && !sel.renaming && !sel.asking), (el) =>
                 el.child(key(o, ["^r"], "suggest a title", (cx) => this.rename(sel, cx), "h-suggest")))
               .when(Boolean(sel), (el) => el.child(key(o, [], "rename", (cx) => this.startReply(sel, cx, "title"), "h-retitle")))
-              .when(Boolean(sel?.pr?.url), (el) => el.child(key(o, ["^g"], "pull request", () => this.open(sel.pr.url), "h-pr")))
+              .when(Boolean(sel?.pr?.url), (el) => el.child(key(o, ["^g"], "pull request", () => this.openPR(sel.pr), "h-pr")))
               .when(Boolean(sel?.issue?.url), (el) => el.child(key(o, ["^l"], "issue", () => this.open(sel.issue.url), "h-issue")))
+              .when(Boolean(sel && this.teleportable && machines().length > 1), (el) => el.child(key(o, ["^t"], "teleport", (cx) => this.teleport(sel, cx), "h-teleport")))
               .child(key(o, ["←", "→"], "stage", (cx) => (this.step(1), cx.notify()), "h-stage"))
               .child(key(o, ["esc"], "close", () => this.dismiss(), "h-close"))),
       );

@@ -56,8 +56,10 @@ machines added later. What it needs there is already present: Claude Code
 which macOS and Linux have.
 
 Optional, for pull requests and Linear issues on the cards: herdr-github
-and herdr-linear in `~/.local/bin` where the person is signed in to GitHub
-and Linear. Mention them; don't install them unasked.
+and herdr-linear where the person is signed in to GitHub and Linear,
+either fetched by their own app mods or in `~/.local/bin`. With the GitHub
+mod (github.com/mrolafsson/herdr-github/tree/main/app) installed, a
+pull request opens in it. Mention them; don't install them unasked.
 
 To see that it works: open it (⌘R). The first opening on a machine takes a
 few seconds longer while herdr-recap is fetched; afterwards it's in
@@ -84,9 +86,11 @@ fetch herdr-recap onto, is named in a line under the list with why.
   release's `checksums.txt`, and keeps it in
   `~/.local/share/herdr-recap/app/<version>/`. It runs `hc` to read each
   agent's terminal, and `hc send` to type a reply into an agent.
-- With herdr-github and herdr-linear in `~/.local/bin` where you're signed
-  in, it shows each agent's pull request and Linear issue (`prs`,
-  `issues`).
+- With herdr-github and herdr-linear where you're signed in (the copy
+  their app mod fetched, else `~/.local/bin`), it shows each agent's pull
+  request and Linear issue (`prs`, `issues`). With the GitHub mod
+  installed, a pull request opens in it (`openOverlay`, `back: "recap"`),
+  else in the browser.
 - Reads and writes `recap-cache.json` in the app's home, to show what it
   knew at once on opening.
 
@@ -106,5 +110,8 @@ chips. JetBrains Mono for branches, machines and keys.
 closes the popup, `ctrl-r` takes a suggested title, or asks for one now (`herdr-recap
 title`, in the background), `ctrl-x` turns it down, and a click on the
 chosen agent's title renames it to a title you type.
+With herdr-teleport's Teleport mod installed too, `ctrl-t` moves the
+chosen agent to another machine, in Teleport's popup (`esc` there comes
+back here).
 `recap.demo` (with `herdr-app do`, while it's open) switches to made-up
 agents for that opening.
