@@ -1,0 +1,4 @@
+{
+  "global": { "cmd-r": "mod.open:recap" },
+  "mod:recap": { "tab": "recap.reply", "ctrl-r": "recap.rename", "ctrl-x": "recap.ignore", "escape": "recap.escape" }
+}

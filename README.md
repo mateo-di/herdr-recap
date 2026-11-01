@@ -7,6 +7,10 @@ remembering what each one was doing is the pain. herdr-recap is a
 [herdr](https://herdr.dev) popup that tells you, per agent, where it got to
 and whose move it is.
 
+**In the Herdr app too.** The same recaps, in a popup designed for the app:
+every agent on every machine, drawn icons, colour only where there's state
+to tell. See [In the Herdr app](#in-the-herdr-app).
+
 ![The popup on the demo's agents, grouped by stage under tabs: one that needs you, one done, one idle, two working, one in review, one that just woke and one snoozed](docs/images/agents.png)
 
 - **Recaps are written while you're away.** Claude Code's own `/recap`, or
@@ -192,6 +196,15 @@ there.
 
 ## Install
 
+For the herdr TUI, the Herdr app, or both:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/mrolafsson/herdr-recap/main/install.sh | sh
+```
+
+installs whichever you have (`--tui` or `--app` to choose). For the TUI alone,
+the usual way works as before:
+
 ```sh
 herdr plugin install mrolafsson/herdr-recap
 ```
@@ -217,6 +230,46 @@ bindings it started with.
 
 `Recap: demo (fictional agents)` in the command palette shows it on made-up
 agents: no Claude calls, safe to screenshot.
+
+## In the Herdr app
+
+![Recap in the Herdr app, on the demo's agents](app/preview.png)
+
+The app's Recap is a mod: the same recaps, freshness and titles as the
+TUI's popup, by the same herdr-recap, in a popup designed for the app.
+Every agent on every machine the app is connected to is in one list, and
+Enter goes to an agent wherever it runs.
+
+![Replying to an agent from the app's Recap: Tab, type, Enter](docs/images/app-reply.png)
+
+**Install** it by asking the agent in your Herdr window to *add the mod at
+github.com/mrolafsson/herdr-recap/tree/main/app*, which follows the app's
+own steps (it reads the mod, copies it into `mods/`, merges its keys and
+checks it), or from a terminal:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/mrolafsson/herdr-recap/main/install.sh | sh -s -- --app
+```
+
+**Nothing else to install.** The first time the mod looks at a machine with
+agents, it fetches the herdr-recap release it's part of for that machine
+(macOS or Linux, Intel or ARM), checks it against the release's checksums,
+and keeps it in `~/.local/share/herdr-recap/app/<version>/`, apart from any
+herdr-recap installed for the TUI. Both read and write the same recaps
+(`~/.local/state/herdr/plugins/herdr-recap/recaps/`), so with both installed
+neither pays for a recap the other already wrote.
+
+**Pull requests and Linear issues** show on its cards when herdr-github and
+herdr-linear are installed where you're signed in.
+
+**Keys**, from its `keys.json`, merged into the app's: ⌘R opens it; type to
+filter; ↑ ↓ and Enter go to an agent; ← → change stage; Tab replies (Enter
+sends, Esc leaves the reply); ctrl+r and ctrl+x take or turn down a better
+title; ctrl+g and ctrl+l open its pull request or issue.
+`herdr-app do recap.demo` shows made-up agents, for a screenshot.
+
+The design it's built to, with its icons, type scale and colour roles, is
+[docs/app-design.html](docs/app-design.html).
 
 ## Keys
 

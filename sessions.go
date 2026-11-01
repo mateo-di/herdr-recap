@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-// What the Herdr app's mod (herdr-mods-recap) asks of this machine. The app runs
+// What the Herdr app's Recap mod (app/) asks of this machine. The app runs
 // its agents in herdr-core, not the herdr server, so it names an agent by its
 // Claude process rather than a herdr pane, and runs this where the agent runs.
 

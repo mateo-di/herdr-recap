@@ -1,12 +1,27 @@
 # Changelog
 
+## 0.12.0 - 2026-11-01
+
+- **Recap in the Herdr app.** The app's Recap mod now lives here, in
+  `app/`: every agent on every machine the app is connected to, in a popup
+  designed for the app (drawn icons, colour only on state, cards that lift),
+  with the same recaps, freshness and titles as the TUI's. It needs nothing
+  else installed: the first time it looks at a machine with agents, it
+  fetches this release of herdr-recap for that machine, checks it against
+  the release's checksums, and keeps it apart from a TUI install, sharing
+  its recaps. Install it by asking your Herdr agent to add the mod at
+  github.com/mrolafsson/herdr-recap/tree/main/app, or with `install.sh
+  --app`.
+- **One installer for both.** `install.sh` installs the TUI plugin, the app
+  mod, or both, whichever you have; it's one `curl … | sh` line.
+
 ## 0.11.0 - 2026-11-01
 
 - **Recaps for the Herdr app.** `herdr-recap sessions` gives the session and
   recap of Claude agents named by their process rather than a herdr pane,
   and with `--write` writes the out-of-date ones in the background. The
   Herdr app runs its agents in herdr-core, which herdr doesn't see, and
-  [herdr-mods-recap](https://github.com/mrolafsson/herdr-mods-recap) uses this to show
+  the app's Recap mod (`app/`, from 0.12.0) uses this to show
   their recaps there. Recaps are shared with this plugin's.
 
 ## 0.10.1 - 2026-10-21
