@@ -44,7 +44,7 @@ function ticketKey(s) {
 // The herdr-recap this mod is part of (its release; the repo's tests hold it
 // to herdr-plugin.toml's version). It does the work on each machine with
 // agents: their sessions, recaps and titles, with the TUI plugin's cache.
-export const RECAP_VERSION = "0.12.0";
+export const RECAP_VERSION = "0.12.1";
 
 // Puts that release on a machine, once: into a folder of its own version, so
 // it never touches a herdr-recap installed for the TUI. The archive for the
@@ -137,8 +137,10 @@ export default class Recap extends View {
     this.width = 900;
     // When each agent's status last changed, for agents the core gives no time for.
     this.changed = JSON.parse(localStorage.getItem("changed") ?? "{}");
-    // The demo's made-up agents in place of the real ones (recap.demo).
-    this.demo = localStorage.getItem("demo") === "1";
+    // The demo's made-up agents in place of the real ones (recap.demo): for
+    // this opening only, never kept, so the popup always opens on your own.
+    this.demo = false;
+    localStorage.removeItem("demo");
 
     this.input = InputState.new({ placeholder: "Type to filter…  ← → to change tabs" });
     this.input.on("change", (_e, cx) => {
@@ -186,7 +188,6 @@ export default class Recap extends View {
         // first, and only then out of the popup.
         if (c === "demo") {
           this.demo = !this.demo;
-          localStorage.setItem("demo", this.demo ? "1" : "0");
           this.at = 0;
         } else if (c === "escape") this.replying ? this.endReply(cx) : this.dismiss();
         else if (c === "reply") this.startReply(sel, cx);
@@ -690,7 +691,9 @@ export default class Recap extends View {
     const info = sel?.info ?? {};
     const trouble = Object.values(this.unasked);
     const machineCount = new Set(all.map((r) => r.machine ?? "here")).size;
-    const summary = `${all.length} agent${all.length === 1 ? "" : "s"}${machineCount > 1 ? ` · ${machineCount} machines` : ""}`;
+    const summary = this.demo
+      ? "Demo · made-up agents"
+      : `${all.length} agent${all.length === 1 ? "" : "s"}${machineCount > 1 ? ` · ${machineCount} machines` : ""}`;
     const replying = this.replying;
 
     return v_flex()

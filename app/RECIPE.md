@@ -48,4 +48,5 @@ chips. JetBrains Mono for branches, machines and keys.
 
 `cmd-r` opens it. In it: `tab` replies, `escape` leaves a reply before it
 closes the popup, `ctrl-r` / `ctrl-x` take or turn down a suggested title.
-`recap.demo` (with `herdr-app do`) switches to made-up agents.
+`recap.demo` (with `herdr-app do`, while it's open) switches to made-up
+agents for that opening.

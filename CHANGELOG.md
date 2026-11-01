@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.12.1 - 2026-11-01
+
+- **The app's Recap always opens on your own agents.** Its demo lasted
+  past the popup it was switched on in, so an install could open on made-up
+  agents. Now it's for that opening only, and the header says *Demo ·
+  made-up agents* while it's on.
+
 ## 0.12.0 - 2026-11-01
 
 - **Recap in the Herdr app.** The app's Recap mod now lives here, in

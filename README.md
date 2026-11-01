@@ -266,7 +266,8 @@ herdr-linear are installed where you're signed in.
 filter; ↑ ↓ and Enter go to an agent; ← → change stage; Tab replies (Enter
 sends, Esc leaves the reply); ctrl+r and ctrl+x take or turn down a better
 title; ctrl+g and ctrl+l open its pull request or issue.
-`herdr-app do recap.demo` shows made-up agents, for a screenshot.
+With it open, `herdr-app do recap.demo` shows made-up agents instead, for a
+screenshot, until it closes; the header says so while it does.
 
 The design it's built to, with its icons, type scale and colour roles, is
 [docs/app-design.html](docs/app-design.html).
