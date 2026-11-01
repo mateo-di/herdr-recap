@@ -13,7 +13,7 @@ import * as fs from "fs/promises";
 import { v_flex, h_flex, InputState, Input } from "gpui-base";
 import { agents, machines, spaces, run, exec, hc, theme, appHome, props, closeOverlay, openOverlay, nextCommand, window } from "herdr";
 import { demoRows } from "./demo.js";
-import { tones, tint, STAGES, ALL, stageOf, stateIcon, stageColor, icon, prLook, issueIcon, chip, bar, duration, words, key, MONO } from "./look.js";
+import { tones, tint, countPill, STAGES, ALL, stageOf, stateIcon, stageColor, icon, prLook, issueIcon, chip, bar, duration, words, key, MONO } from "./look.js";
 
 // While it's open, recaps written meanwhile come in this often; pull requests
 // and issues (which the plugins cache for a minute) less often.
@@ -778,7 +778,7 @@ export default class Recap extends View {
         })
         .child(div().flex_none().w(7).h(7).rounded_full().bg(o[s.tone]))
         .child(div().when(on, (el) => el.font_semibold()).when(!on, (el) => el.font_medium()).text_color(on ? o.fg : o.muted).child(s.short))
-        .child(div().font_medium().text_color(on ? o.muted : o.dim).child(String(count(s.id))));
+        .child(countPill(o, count(s.id), on));
     };
 
     // Under All, a heading for each stage.
