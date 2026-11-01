@@ -3,15 +3,18 @@
 **Come back to a bunch of agents and know in seconds which ones need you.**
 
 Starting a new agent is almost too easy. Coming back to a dozen or more and
-remembering what each one was doing is the pain. herdr-recap is a
-[herdr](https://herdr.dev) popup that tells you, per agent, where it got to
-and whose move it is.
+remembering what each one was doing is the pain. herdr-recap tells you, per
+agent, where it got to and whose move it is: in the
+[Herdr app](https://herdr.dev), across every machine it's connected to, and
+in the [herdr](https://herdr.dev) TUI. One install, the same recaps in both.
 
-**In the Herdr app too.** The same recaps, in a popup designed for the app:
-every agent on every machine, drawn icons, colour only where there's state
-to tell. See [In the Herdr app](#in-the-herdr-app).
+![Recap in the Herdr app, on the demo's agents: one that needs you, with its question and a Reply, one done with a better title suggested, and two working, each with its machine, branch, changes, tasks and Linear issue](app/preview.png)
 
-![The popup on the demo's agents, grouped by stage under tabs: one that needs you, one done, one idle, two working, one in review, one that just woke and one snoozed](docs/images/agents.png)
+*In the Herdr app.*
+
+![The popup in the herdr TUI, on the demo's agents, grouped by stage under tabs: one that needs you, one done, one idle, two working, one in review, one that just woke and one snoozed](docs/images/agents.png)
+
+*In the herdr TUI.*
 
 - **Recaps are written while you're away.** Claude Code's own `/recap`, or
   the agent's equivalent, run in a throwaway fork, so your agent's
@@ -21,7 +24,7 @@ to tell. See [In the Herdr app](#in-the-herdr-app).
   prompt cache is still warm.
 - **Grouped by whose move it is.** Needs you, Done, Needs fixing, Idle,
   Working, In review and Merged, shown as tabs with counts; then Snoozed,
-  with herdr-snooze.
+  with herdr-snooze (TUI).
 - **See what a blocked agent wants.** The pending question or command is
   right on the row.
 - **Reply without leaving the popup.** Tab, type, enter; or enter or click
@@ -29,18 +32,126 @@ to tell. See [In the Herdr app](#in-the-herdr-app).
 - **Full context at a glance.** Each row has the branch, uncommitted and
   unpushed work, task progress, PR state, and how long it has been waiting.
 - **Type to filter** across titles, recaps, branches, stages and workspaces.
-- **Search built in.** When no row matches, the agents' conversations are
+- **Search built in** (TUI). When no row matches, the agents' conversations are
   searched for what you typed, so you find the agent that said it. Uses
   Memex to put the best match first, if it's installed.
 - **Want better titles?** Agents with no title, or a slug for one, get a
-  suggested name with their ticket key, applied with one keypress.
+  suggested name with their ticket key, applied with one keypress; or name
+  them yourself.
 - **Pull requests and Linear issues are links**, with herdr-github and
   herdr-linear installed.
-- **How the machine's doing**, beside the tabs: its CPU and memory, with
-  herdr-vitals installed.
-- **It fits in.** Follows herdr's theme, works with the mouse.
-- **Works with Claude, Codex, OpenCode and Hermes** (the last two through
-  Memex). Linux and macOS.
+- **How the machine's doing** (TUI), beside the tabs: its CPU and memory,
+  with herdr-vitals installed.
+- **It fits in.** Follows the app's or herdr's theme, works with the mouse.
+- **Works with Claude Code**, and in the TUI with Codex, OpenCode and
+  Hermes too (the last two through Memex). Linux and macOS.
+
+## Install
+
+### In the Herdr app
+
+Ask the agent in your Herdr window to *add the mod at
+github.com/mrolafsson/herdr-recap/tree/main/app*: it follows the app's own
+steps (it reads the mod, copies it into `mods/`, merges its keys and checks
+it). Or from a terminal:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/mrolafsson/herdr-recap/main/install.sh | sh -s -- --app
+```
+
+That's all: the mod fetches what it needs onto each machine with agents by
+itself (see [In the Herdr app](#in-the-herdr-app)). ⌘R opens it.
+
+### In the herdr TUI
+
+```sh
+herdr plugin install mrolafsson/herdr-recap
+```
+
+The build step compiles it with Go if you have it, or downloads the release
+binary for your platform and checks its SHA-256.
+
+Bind it to a key in `~/.config/herdr/config.toml`:
+
+```toml
+[[keys.command]]
+key = "prefix+alt+r"
+type = "plugin_action"
+command = "herdr-recap.open"
+```
+
+On macOS, `alt` needs Option to send Alt in your terminal (Ghostty:
+`macos-option-as-alt = true`).
+
+Then `herdr server reload-config`, and **start a new herdr client** (detach
+and run `herdr` again): a client that was already open keeps the key
+bindings it started with.
+
+`Recap: demo (fictional agents)` in the command palette shows it on made-up
+agents: no Claude calls, safe to screenshot.
+
+### Both
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/mrolafsson/herdr-recap/main/install.sh | sh
+```
+
+installs the mod, the plugin, or both, whichever of the app and herdr you
+have.
+
+### Requirements
+
+- **The Herdr app**, or **herdr 0.9.0** or later.
+- **Claude Code** with `/recap` (2.1.x), signed in. Claude sessions keep their
+  native `/recap` path.
+- Optional, for [other agents](#other-agents): **Codex** for its own recaps
+  (tried with 0.157), and **Memex 0.24.0** or later for OpenCode recaps
+  (tried with 0.27.2). Hermes recaps need a Memex that reads Hermes
+  sessions
+  ([nicosuave/memex#220](https://github.com/nicosuave/memex/pull/220)),
+  which 0.27.2 does.
+- **Linux** or **macOS**, on arm64 or x86-64.
+
+## In the Herdr app
+
+The app's Recap is a mod: the same recaps, freshness and titles as the
+TUI's popup, by the same herdr-recap, in a popup designed for the app.
+Every agent on every machine the app is connected to is in one list, and
+Enter goes to an agent wherever it runs.
+
+![Replying to an agent from the app's Recap: Tab, type, Enter](docs/images/app-reply.png)
+
+**Nothing else to install.** The first time the mod looks at a machine with
+agents, it fetches the herdr-recap release it's part of for that machine
+(macOS or Linux, Intel or ARM), checks it against the release's checksums,
+and keeps it in `~/.local/share/herdr-recap/app/<version>/`, apart from any
+herdr-recap installed for the TUI. Both read and write the same recaps
+(`~/.local/state/herdr/plugins/herdr-recap/recaps/`), so with both installed
+neither pays for a recap the other already wrote.
+
+**Pull requests and Linear issues** show on its cards when herdr-github and
+herdr-linear are installed where you're signed in.
+
+Its keys come from its `keys.json`, merged into the app's:
+
+| Key | Does |
+| --- | --- |
+| ⌘R | open it |
+| typing | filter |
+| `↑` `↓`, `enter`, click | choose an agent; go to it, on whichever machine it runs |
+| `←` / `→` | the stage before / after |
+| `tab` | reply to it: type, `enter` sends, `esc` leaves the reply |
+| `ctrl+r` | rename it to the title suggested under its own; with none suggested, ask for one |
+| `ctrl+x` | ignore the suggested title: it isn't offered again |
+| click on its title, or *rename* | rename it yourself: its title, to edit; `enter` renames once it's between turns |
+| `ctrl+g` / `ctrl+l`, click | open its pull request / Linear issue |
+| `esc` | close |
+
+With it open, `herdr-app do recap.demo` shows made-up agents instead, for a
+screenshot, until it closes; the header says so while it does.
+
+The design it's built to, with its icons, type scale and colour roles, is
+[docs/app-design.html](docs/app-design.html).
 
 ## Works with the other herdr plugins
 
@@ -89,7 +200,9 @@ at once. herdr-recap keeps it for you: for every agent, a one-line recap of
 where it got to, written while you were away, with the details that decide
 what to look at first.
 
-## Scan the list
+## In the herdr TUI
+
+### Scan the list
 
 Open it (`prefix+alt+r`) and read down. Each agent is a few lines:
 
@@ -160,7 +273,7 @@ conversation, rather than by stage. Nothing to set up: Recap finds Memex by
 itself. Who is listed is still decided by reading the conversations, which
 have what was said a moment ago; Memex's index may be a little behind.
 
-## Reply from the list
+### Reply from the list
 
 Most of what an agent needs from you is short: *yes, go ahead*, *push it*,
 *try the other approach*. Press `tab` on it, type, and `enter` sends it, as if
@@ -181,99 +294,7 @@ there.
 [Privacy](#privacy) · [Troubleshooting](#troubleshooting) ·
 [How it works](#how-it-works) · [Development](#development)
 
-## Requirements
-
-- **herdr 0.9.0** or later.
-- **Claude Code** with `/recap` (2.1.x), signed in. Claude sessions keep their
-  native `/recap` path.
-- Optional, for [other agents](#other-agents): **Codex** for its own recaps
-  (tried with 0.157), and **Memex 0.24.0** or later for OpenCode recaps
-  (tried with 0.27.2). Hermes recaps need a Memex that reads Hermes
-  sessions
-  ([nicosuave/memex#220](https://github.com/nicosuave/memex/pull/220)),
-  which 0.27.2 does.
-- **Linux** or **macOS**, on arm64 or x86-64.
-
-## Install
-
-For the herdr TUI, the Herdr app, or both:
-
-```sh
-curl -fsSL https://raw.githubusercontent.com/mrolafsson/herdr-recap/main/install.sh | sh
-```
-
-installs whichever you have (`--tui` or `--app` to choose). For the TUI alone,
-the usual way works as before:
-
-```sh
-herdr plugin install mrolafsson/herdr-recap
-```
-
-The build step compiles it with Go if you have it, or downloads the release
-binary for your platform and checks its SHA-256.
-
-Bind it to a key in `~/.config/herdr/config.toml`:
-
-```toml
-[[keys.command]]
-key = "prefix+alt+r"
-type = "plugin_action"
-command = "herdr-recap.open"
-```
-
-On macOS, `alt` needs Option to send Alt in your terminal (Ghostty:
-`macos-option-as-alt = true`).
-
-Then `herdr server reload-config`, and **start a new herdr client** (detach
-and run `herdr` again): a client that was already open keeps the key
-bindings it started with.
-
-`Recap: demo (fictional agents)` in the command palette shows it on made-up
-agents: no Claude calls, safe to screenshot.
-
-## In the Herdr app
-
-![Recap in the Herdr app, on the demo's agents](app/preview.png)
-
-The app's Recap is a mod: the same recaps, freshness and titles as the
-TUI's popup, by the same herdr-recap, in a popup designed for the app.
-Every agent on every machine the app is connected to is in one list, and
-Enter goes to an agent wherever it runs.
-
-![Replying to an agent from the app's Recap: Tab, type, Enter](docs/images/app-reply.png)
-
-**Install** it by asking the agent in your Herdr window to *add the mod at
-github.com/mrolafsson/herdr-recap/tree/main/app*, which follows the app's
-own steps (it reads the mod, copies it into `mods/`, merges its keys and
-checks it), or from a terminal:
-
-```sh
-curl -fsSL https://raw.githubusercontent.com/mrolafsson/herdr-recap/main/install.sh | sh -s -- --app
-```
-
-**Nothing else to install.** The first time the mod looks at a machine with
-agents, it fetches the herdr-recap release it's part of for that machine
-(macOS or Linux, Intel or ARM), checks it against the release's checksums,
-and keeps it in `~/.local/share/herdr-recap/app/<version>/`, apart from any
-herdr-recap installed for the TUI. Both read and write the same recaps
-(`~/.local/state/herdr/plugins/herdr-recap/recaps/`), so with both installed
-neither pays for a recap the other already wrote.
-
-**Pull requests and Linear issues** show on its cards when herdr-github and
-herdr-linear are installed where you're signed in.
-
-**Keys**, from its `keys.json`, merged into the app's: ⌘R opens it; type to
-filter; ↑ ↓ and Enter go to an agent; ← → change stage; Tab replies (Enter
-sends, Esc leaves the reply); ctrl+r takes the better title suggested, or
-with none, asks for one now, and ctrl+x turns it down; a click on its title renames it
-yourself (the current title, to edit; Enter renames once it's between turns); ctrl+g and ctrl+l open its pull request or issue.
-With it open, `herdr-app do recap.demo` shows made-up agents instead, for a
-screenshot, until it closes; the header says so while it does.
-
-The design it's built to, with its icons, type scale and colour roles, is
-[docs/app-design.html](docs/app-design.html).
-
-## Keys
+### Keys
 
 | Key | Does |
 | --- | --- |
