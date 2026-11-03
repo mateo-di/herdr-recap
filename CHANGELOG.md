@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.12.10 - 2026-11-03
+
+- **Recaps and titles don't carry on with the work.** A session can stop
+  mid-step, and the fork asked for its recap or title could take the
+  question as the next thing to do. The Codex recap and the title now tell
+  it not to, and an answer that writes out a tool call is refused rather
+  than shown, and asked for again later
+  ([#5](https://github.com/mrolafsson/herdr-recap/issues/5)).
+
 ## 0.12.9 - 2026-11-03
 
 - **Recaps are written on a fresh app-mod install.** With only the Herdr
