@@ -323,8 +323,9 @@ func runRecap(ctx context.Context, cfg config, s claudeSession) (recap, error) {
 	args := recapArgs(s.ID)
 	if cfg.Language != "" {
 		// A language needs an explicit request; /recap chooses its own wording.
-		// Keep the same unsaved fork and JSON result as the native command.
-		args[len(args)-1] = inLanguage(codexPrompt+" If there is no substantive conversation yet, answer exactly: Nothing to recap yet", cfg.Language)
+		// Keep the unsaved fork and JSON result; the prompted recap has no tools.
+		prompt := inLanguage(codexPrompt+" If there is no substantive conversation yet, answer exactly: Nothing to recap yet", cfg.Language)
+		args = append(args[:len(args)-1], "--tools", "", prompt)
 	}
 	out, err := runCommand(ctx, cfg, s, args)
 	if err != nil {

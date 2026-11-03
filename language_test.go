@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"slices"
@@ -43,6 +44,9 @@ printf '{"result":"正在修复登录问题，下一步运行测试。"}'
 		if !slices.Contains(args, want) {
 			t.Errorf("request lacks %q: %q", want, args)
 		}
+	}
+	if i := slices.Index(args, "--tools"); i < 0 || i+1 >= len(args) || args[i+1] != "" {
+		t.Errorf("the prompted recap can still use tools: %q", args)
 	}
 	if prompt := args[len(args)-1]; !strings.Contains(prompt, "zh-CN") || !strings.Contains(prompt, "Don't run any commands or use any tools") {
 		t.Errorf("language or read-only instruction missing: %q", prompt)
@@ -295,5 +299,56 @@ func TestTheAppBackendSchedulesUnchangedSessionsWhenLanguageChanges(t *testing.T
 	}
 	if len(sessions) != 1 || sessions[0].Fresh || len(spawned) != 1 || len(spawned[0]) != 3 || spawned[0][0] != "sessions" || spawned[0][1] != "--now" {
 		t.Fatalf("app did not schedule the old-language recap: %+v, spawned %q", sessions, spawned)
+	}
+}
+
+func TestTheTUIRefreshesAnOtherLanguageTitleWithoutRewritingAFreshRecap(t *testing.T) {
+	titles := languageReplies(t)
+	s := testSessionWith(t, "one\n")
+	cfg := withDefaults(config{})
+	original, _, err := ensureRecap(context.Background(), cfg, s, "fix-login-bug", false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := ensureTitle(context.Background(), withDefaults(config{Language: "zh-CN"}), s, "fix-login-bug"); err != nil {
+		t.Fatal(err)
+	}
+	src := liveSource{cfg}
+	cached, current := src.cached(s)
+	if !current || cached.Title != "" {
+		t.Fatalf("expected a current recap with a hidden other-language suggestion: %+v, current %v", cached, current)
+	}
+	m := newModel(context.Background(), src)
+	m.entries["w1:p1"] = &entry{agent: agentInfo{PaneID: "w1:p1", Agent: "claude", Status: "done", Title: "fix-login-bug"}}
+	_, cmd := m.Update(sessionMsg{pane: "w1:p1", session: s, cached: cached, current: current})
+	if cmd == nil {
+		t.Fatal("TUI hid the other-language suggestion without scheduling its replacement")
+	}
+	msg := cmd()
+	if _, ok := msg.(titledMsg); !ok {
+		t.Fatalf("the TUI requested more than a title: %T", msg)
+	}
+	next, _ := m.Update(msg)
+	if !next.(model).entries["w1:p1"].current {
+		t.Fatal("refreshing the title made the recap stale")
+	}
+	refreshed, current := src.cached(s)
+	if !current || refreshed.Title != "HAL-12 Fix the Login Bug" || !refreshed.At.Equal(original.At) || titles.Load() != 3 {
+		t.Fatalf("title-only refresh failed: %+v, current %v, titles %d", refreshed, current, titles.Load())
+	}
+}
+
+func TestTheTUIDoesNotRetryAFailedAutomaticTitleOnEveryPoll(t *testing.T) {
+	s := testSessionWith(t, "one\n")
+	m := newModel(context.Background(), liveSource{withDefaults(config{})})
+	m.entries["w1:p1"] = &entry{agent: agentInfo{PaneID: "w1:p1", Agent: "claude", Status: "done", Title: "fix-login-bug"}}
+	msg := sessionMsg{pane: "w1:p1", session: s, cached: &recap{Session: s.ID, Text: "Fixing login", TitleLanguage: "zh-CN"}, current: true}
+	next, cmd := m.Update(msg)
+	if cmd == nil {
+		t.Fatal("the other-language title wasn't scheduled")
+	}
+	next, _ = next.Update(titledMsg{pane: "w1:p1", session: s.ID, err: errors.New("provider unavailable")})
+	if _, cmd := next.Update(msg); cmd != nil {
+		t.Fatal("a failed automatic title request is retried on every poll")
 	}
 }

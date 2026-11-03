@@ -162,6 +162,7 @@ type entry struct {
 	renameNoted bool // it's kept with the recap: given even with the popup closed
 	renameSent  time.Time
 	titling     bool // a title is being asked for (^r, with none suggested)
+	triedTitle  bool // don't retry a failed automatic title on every poll
 	// settled: its suggested title was taken or turned down here. A recap
 	// read or written before that was noted with it doesn't say so, and
 	// mustn't bring the suggestion back.
@@ -355,6 +356,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if e.session == nil || e.session.ID != msg.session.ID {
 			e.recap = nil // a different conversation now: the old recap isn't its
 			e.settled = false
+			e.triedTitle = false
 		}
 		s := msg.session
 		// A Memex-backed session is looked up again every so often. One
@@ -392,6 +394,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			}
 			return m, m.startRecap(e, false)
+		}
+		// A title can have been asked for in another language without changing
+		// the recap. Refresh only that suggestion; the recap is still current.
+		if e.current && !e.titling && !e.triedTitle && e.recap != nil && e.recap.TitleLanguage != e.recap.Language &&
+			wantsTitle(s, e.recap, sessionTitle(e.agent), e.agent.Cwd, e.recap.Language) {
+			return m, m.startTitle(e)
 		}
 		return m, nil
 
@@ -460,7 +468,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				r := msg.recap
 				e.recap = &r
 			} else {
-				e.recap.Title, e.recap.Settled = msg.recap.Title, false
+				e.recap.Title, e.recap.TitleLanguage, e.recap.Settled = msg.recap.Title, msg.recap.TitleLanguage, false
 			}
 			if suggestion(e) == "" {
 				m.flash = shorten(title(e.agent), 40) + " would keep the title it has."
@@ -1247,10 +1255,14 @@ func (m model) rename() (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 	}
-	e.titling = true
+	return m, m.startTitle(e)
+}
+
+func (m *model) startTitle(e *entry) tea.Cmd {
+	e.titling, e.triedTitle = true, true
 	m.scrollTo() // the row is a line longer
 	src, ctx, pane, s, t := m.src, m.ctx, e.agent.PaneID, *e.session, sessionTitle(e.agent)
-	return m, func() tea.Msg {
+	return func() tea.Msg {
 		r, err := src.suggest(ctx, s, t)
 		return titledMsg{pane, s.ID, r, err}
 	}

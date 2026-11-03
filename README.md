@@ -514,7 +514,8 @@ To request Simplified Chinese recaps and title suggestions, set this in
 A language name such as `"简体中文"` works too. Missing, empty or whitespace-only
 keeps the existing behavior, including Claude's native `/recap`. With a language
 set, Claude receives an explicit goal/current-state/next-action recap request in
-the same unsaved session fork; its wording may differ from the native command.
+the same unsaved session fork with tools disabled; its wording may differ from
+the native command.
 Codex and Memex's default or custom summarizer receive the language instruction
 too. Code, paths, proper names and ticket keys are kept as written.
 
