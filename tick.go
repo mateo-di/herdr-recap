@@ -79,6 +79,15 @@ func schedule(cfg config, a agentInfo) error {
 	return err
 }
 
+// openLog opens recap.log for appending, making the state folder first: on
+// a fresh install only the app mod has run, and nothing else has made it.
+func openLog() (*os.File, error) {
+	if err := os.MkdirAll(stateDir(), 0o700); err != nil {
+		return nil, err
+	}
+	return os.OpenFile(filepath.Join(stateDir(), "recap.log"), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o600)
+}
+
 // spawn starts this program again, detached, logging to recap.log. A
 // variable so tests can stand one in.
 var spawn = func(args ...string) error {
@@ -86,7 +95,7 @@ var spawn = func(args ...string) error {
 	if err != nil {
 		return err
 	}
-	log, err := os.OpenFile(filepath.Join(stateDir(), "recap.log"), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o600)
+	log, err := openLog()
 	if err != nil {
 		return err
 	}

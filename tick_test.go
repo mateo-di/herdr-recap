@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"path/filepath"
 	"slices"
 	"testing"
 )
@@ -149,5 +150,18 @@ func TestHookPane(t *testing.T) {
 		if got := hookPane(); got != want {
 			t.Errorf("%s: got %q", in, got)
 		}
+	}
+}
+
+// A fresh install: nothing has made the state folder yet (issue #6).
+func TestOpenLogMakesTheStateFolder(t *testing.T) {
+	t.Setenv("HERDR_PLUGIN_STATE_DIR", filepath.Join(t.TempDir(), "not", "yet"))
+	log, err := openLog()
+	if err != nil {
+		t.Fatal(err)
+	}
+	log.Close()
+	if fi, err := os.Stat(stateDir()); err != nil || fi.Mode().Perm() != 0o700 {
+		t.Errorf("state folder: %v %v", fi, err)
 	}
 }
