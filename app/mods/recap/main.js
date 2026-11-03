@@ -44,7 +44,7 @@ function ticketKey(s) {
 // The herdr-recap this mod is part of (its release; the repo's tests hold it
 // to herdr-plugin.toml's version). It does the work on each machine with
 // agents: their sessions, recaps and titles, with the TUI plugin's cache.
-export const RECAP_VERSION = "0.12.8";
+export const RECAP_VERSION = "0.12.9";
 
 // Puts that release on a machine, once: into a folder of its own version, so
 // it never touches a herdr-recap installed for the TUI. The archive for the

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.12.9 - 2026-11-03
+
+- **Recaps are written on a fresh app-mod install.** With only the Herdr
+  app's mod installed, and never the TUI plugin, the folder recaps run from
+  didn't exist, so none were ever written
+  ([#6](https://github.com/mrolafsson/herdr-recap/issues/6)).
+
 ## 0.12.8 - 2026-11-01
 
 - **Teleport's demo, from Recap's.** In the demo, `ctrl+t` opens
