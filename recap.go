@@ -178,6 +178,16 @@ func ensureRecap(ctx context.Context, cfg config, s claudeSession, title string,
 	defer unlock()
 	c := loadRecap(s.ID)
 	if fresh(c, s, cfg.Language) && (!force || c.At.After(started)) {
+		// A title-only request may have used another language. Refresh it
+		// under the same lock so a concurrent user decision is never undone.
+		if c.TitleLanguage != cfg.Language && wantsTitle(s, c, title, s.Cwd, cfg.Language) {
+			t, cost, err := suggestTitle(ctx, cfg, s, title)
+			if err != nil {
+				return *c, false, err
+			}
+			c.Title, c.TitleLanguage, c.CostUSD = t, cfg.Language, c.CostUSD+cost
+			return *c, false, saveRecap(*c)
+		}
 		return *c, false, nil
 	}
 	size, mod := transcriptStamp(s.Transcript)

@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync/atomic"
 	"testing"
+	"time"
 )
 
 // A real process at the provider boundary records what Recap asks of it.
@@ -325,8 +326,8 @@ func TestTheTUIRefreshesAnOtherLanguageTitleWithoutRewritingAFreshRecap(t *testi
 		t.Fatal("TUI hid the other-language suggestion without scheduling its replacement")
 	}
 	msg := cmd()
-	if _, ok := msg.(titledMsg); !ok {
-		t.Fatalf("the TUI requested more than a title: %T", msg)
+	if _, ok := msg.(recapMsg); !ok {
+		t.Fatalf("the TUI did not use the serialized cache refresh: %T", msg)
 	}
 	next, _ := m.Update(msg)
 	if !next.(model).entries["w1:p1"].current {
@@ -347,8 +348,70 @@ func TestTheTUIDoesNotRetryAFailedAutomaticTitleOnEveryPoll(t *testing.T) {
 	if cmd == nil {
 		t.Fatal("the other-language title wasn't scheduled")
 	}
-	next, _ = next.Update(titledMsg{pane: "w1:p1", session: s.ID, err: errors.New("provider unavailable")})
+	next, _ = next.Update(recapMsg{pane: "w1:p1", session: s.ID, err: errors.New("provider unavailable")})
 	if _, cmd := next.Update(msg); cmd != nil {
 		t.Fatal("a failed automatic title request is retried on every poll")
+	}
+}
+
+func TestAutomaticTitleRefreshKeepsDecisionsMadeDuringTheRequest(t *testing.T) {
+	for _, decision := range []string{"settled", "pending"} {
+		t.Run(decision, func(t *testing.T) {
+			languageReplies(t)
+			s := testSessionWith(t, "one\n")
+			cfg := withDefaults(config{})
+			if _, _, err := ensureRecap(context.Background(), cfg, s, "fix-login-bug", false); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := ensureTitle(context.Background(), withDefaults(config{Language: "zh-CN"}), s, "fix-login-bug"); err != nil {
+				t.Fatal(err)
+			}
+			src := liveSource{cfg}
+			cached, current := src.cached(s)
+			m := newModel(context.Background(), src)
+			m.entries["w1:p1"] = &entry{agent: agentInfo{PaneID: "w1:p1", Agent: "claude", Status: "done", Title: "fix-login-bug"}}
+			_, cmd := m.Update(sessionMsg{pane: "w1:p1", session: s, cached: cached, current: current})
+			if cmd == nil {
+				t.Fatal("the title refresh wasn't scheduled")
+			}
+			started, release := make(chan struct{}), make(chan struct{})
+			provider := runCommand
+			runCommand = func(ctx context.Context, cfg config, s claudeSession, args []string) ([]byte, error) {
+				close(started)
+				<-release
+				return provider(ctx, cfg, s, args)
+			}
+			finished := make(chan struct{})
+			go func() { cmd(); close(finished) }()
+			<-started
+			decided := make(chan error, 1)
+			go func() {
+				if decision == "pending" {
+					decided <- askRename("w1:p1", s.ID)
+				} else {
+					decided <- settleTitle(s.ID)
+				}
+			}()
+			// A decision may complete now or wait for the automatic cache write.
+			var decisionErr error
+			decisionDone := false
+			select {
+			case decisionErr = <-decided:
+				decisionDone = true
+			case <-time.After(100 * time.Millisecond):
+			}
+			close(release)
+			<-finished
+			if !decisionDone {
+				decisionErr = <-decided
+			}
+			if decisionErr != nil {
+				t.Fatal(decisionErr)
+			}
+			r, _ := src.cached(s)
+			if r.Settled != (decision == "settled") || r.Renaming != (decision == "pending") {
+				t.Fatalf("automatic refresh overwrote the user's decision: %+v", r)
+			}
+		})
 	}
 }

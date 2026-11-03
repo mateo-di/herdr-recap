@@ -399,7 +399,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// the recap. Refresh only that suggestion; the recap is still current.
 		if e.current && !e.titling && !e.triedTitle && e.recap != nil && e.recap.TitleLanguage != e.recap.Language &&
 			wantsTitle(s, e.recap, sessionTitle(e.agent), e.agent.Cwd, e.recap.Language) {
-			return m, m.startTitle(e)
+			e.triedTitle = true
+			return m, m.startRecap(e, false)
 		}
 		return m, nil
 
@@ -1255,14 +1256,10 @@ func (m model) rename() (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 	}
-	return m, m.startTitle(e)
-}
-
-func (m *model) startTitle(e *entry) tea.Cmd {
-	e.titling, e.triedTitle = true, true
+	e.titling = true
 	m.scrollTo() // the row is a line longer
 	src, ctx, pane, s, t := m.src, m.ctx, e.agent.PaneID, *e.session, sessionTitle(e.agent)
-	return func() tea.Msg {
+	return m, func() tea.Msg {
 		r, err := src.suggest(ctx, s, t)
 		return titledMsg{pane, s.ID, r, err}
 	}
