@@ -78,7 +78,7 @@ func titlePrompt(title, branch string) string {
 	if branch != "" {
 		on = fmt.Sprintf(" The git branch is %q: a ticket's key may be in it, or in the conversation.", branch)
 	}
-	return "Suggest a name for this session, for a list of sessions. " + current +
+	return stopStep + "Suggest a name for this session, for a list of sessions. " + current +
 		" Answer with the name alone on one line: no quotes, no explanation, and don't use any tools." +
 		" At most six words and " + fmt.Sprint(maxTitleWidth) + " characters, in Title Case, saying what the work is as a whole rather than its latest step." +
 		" If the work is for a ticket, start with the ticket's key in capitals, like HAL-1921." + on +
@@ -131,6 +131,9 @@ func parseTitle(out []byte) (string, float64, error) {
 // lines, a sentence, too long.
 func cleanTitle(text string) (string, error) {
 	text = strings.TrimSpace(text)
+	if toolCall(text) {
+		return "", errNotRecap
+	}
 	if strings.Contains(text, "\n") {
 		return "", errors.New("the answer was more than a title")
 	}

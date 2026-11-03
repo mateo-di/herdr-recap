@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"syscall"
 	"time"
@@ -105,6 +106,42 @@ func claudes(s claudeSession) bool { return s.Agent == "" || s.Agent == "claude"
 
 // errNothingYet: the session has no conversation to recap.
 var errNothingYet = errors.New("nothing to recap yet")
+
+// stopStep leads a question put to a fork of a session. A session can end
+// mid-step, on a tool call with no result or a command that was killed, and
+// a fork of it can take the question for the next thing to do and carry on
+// with the work instead (issue #5). It goes in the prompt rather than a
+// system prompt, which would cost the fork its prompt cache.
+const stopStep = "Stop: this is a question about this session, not a continuation of the work above, " +
+	"and any step it ends on is not to be carried out. "
+
+// errNotRecap: the fork answered with a tool call, carrying on with the
+// session's work rather than answering. Nothing is cached, so it's asked
+// again when the session moves on.
+var errNotRecap = errors.New("the answer carried on with the work instead of answering")
+
+var backticked = regexp.MustCompile("`[^`]*`")
+
+// toolCallMarkers are how a tool call reads when a model writes one out as
+// text, by model family.
+var toolCallMarkers = []string{
+	"|DSML|",                      // DeepSeek
+	"<function_calls>", "<invoke", // Claude
+	"<tool_call>", "<|tool_call", // Qwen, Hermes; DeepSeek R1's <|tool_calls_begin|>
+	"<tool_use>",
+}
+
+// toolCall: the answer carries a tool call written out as text. A marker
+// quoted in backticks is a recap of work on tool calls, like this one's.
+func toolCall(text string) bool {
+	text = backticked.ReplaceAllString(text, "")
+	for _, m := range toolCallMarkers {
+		if strings.Contains(text, m) {
+			return true
+		}
+	}
+	return false
+}
 
 // ensureRecap returns a current recap for s, writing one (ran) if the cached
 // one is out of date, or with force regardless. One recap per session runs
@@ -310,6 +347,8 @@ func parseRecap(out []byte) (string, float64, error) {
 		return "", cost, errors.New(text)
 	case text == "":
 		return "", cost, errors.New("claude gave an empty recap")
+	case toolCall(text):
+		return "", cost, errNotRecap
 	}
 	return text, cost, nil
 }

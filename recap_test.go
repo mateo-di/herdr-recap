@@ -193,3 +193,34 @@ func TestACachedRecapIsCleaned(t *testing.T) {
 		t.Error("another session's recap")
 	}
 }
+
+// A fork that carries on with the work answers with a tool call: not a
+// recap, so nothing is cached (issue #5).
+func TestRecapThatCarriesOnIsRefused(t *testing.T) {
+	for _, text := range []string{
+		`I'll rerun it now. <function_calls><invoke name=\"Bash\">`,
+		`<|DSML|function_calls>`,
+		`Rerunning step 1. <tool_call>{\"name\": \"shell\"}</tool_call>`,
+	} {
+		out := []byte(`{"result": "` + text + `", "total_cost_usd": 0.01}`)
+		if got, _, err := parseRecap(out); !errors.Is(err, errNotRecap) {
+			t.Errorf("%s: got %q, %v", text, got, err)
+		}
+		if _, err := cleanTitle(text); !errors.Is(err, errNotRecap) {
+			t.Errorf("title %s: %v", text, err)
+		}
+	}
+	// A recap of work on tool calls, quoting the marker, is a recap.
+	out := []byte("{\"result\": \"Parsing `<tool_call>` tags for Qwen; next, the tests.\"}")
+	if _, _, err := parseRecap(out); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestForkQuestionsLeadWithStop(t *testing.T) {
+	for _, p := range []string{codexPrompt, titlePrompt("", "")} {
+		if !strings.HasPrefix(p, stopStep) {
+			t.Errorf("doesn't lead with the stop: %q", p)
+		}
+	}
+}

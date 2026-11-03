@@ -79,7 +79,8 @@ func resolveCodexSession(a agentInfo) (claudeSession, error) {
 }
 
 // codexPrompt asks for what Claude's /recap gives: a line on where it got to.
-const codexPrompt = "Recap this session in at most 40 words, for someone coming back to it: what it's working on, where it got to, and what's next. " +
+// It leads with stopStep, as every question put to a fork of a session does.
+const codexPrompt = stopStep + "Recap this session in at most 40 words, for someone coming back to it: what it's working on, where it got to, and what's next. " +
 	"Answer with the recap alone, as plain text. Don't run any commands or use any tools."
 
 // codexArgs forks the session for one answer to prompt, written to out: nothing is
@@ -158,8 +159,11 @@ func runCodexRecap(ctx context.Context, cfg config, s claudeSession) (recap, err
 		return recap{}, fmt.Errorf("codex: %w", err)
 	}
 	text := strings.Join(strings.Fields(clean(out, false)), " ")
-	if text == "" {
+	switch {
+	case text == "":
 		return recap{}, errors.New("codex gave an empty recap")
+	case toolCall(text):
+		return recap{}, errNotRecap
 	}
 	return recap{Session: s.ID, Source: "codex", Text: text, At: time.Now()}, nil
 }
