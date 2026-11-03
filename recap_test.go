@@ -218,7 +218,7 @@ func TestRecapThatCarriesOnIsRefused(t *testing.T) {
 }
 
 func TestForkQuestionsLeadWithStop(t *testing.T) {
-	for _, p := range []string{codexPrompt, titlePrompt("", "")} {
+	for _, p := range []string{codexPrompt, titlePrompt("", "", ""), inLanguage(codexPrompt, "zh-CN"), titlePrompt("", "", "zh-CN")} {
 		if !strings.HasPrefix(p, stopStep) {
 			t.Errorf("doesn't lead with the stop: %q", p)
 		}
