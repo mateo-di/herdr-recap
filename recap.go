@@ -19,21 +19,23 @@ import (
 // before the recap was asked for: the recap is current while the transcript
 // hasn't changed since.
 type recap struct {
-	Session string    `json:"session"`
-	Source  string    `json:"source,omitempty"`
-	Stamp   string    `json:"stamp,omitempty"`
-	Text    string    `json:"text"`
-	At      time.Time `json:"at"`
-	Size    int64     `json:"size"`
-	ModTime time.Time `json:"mod_time"`
-	CostUSD float64   `json:"cost_usd"`
+	Session  string    `json:"session"`
+	Source   string    `json:"source,omitempty"`
+	Stamp    string    `json:"stamp,omitempty"`
+	Text     string    `json:"text"`
+	Language string    `json:"language,omitempty"`
+	At       time.Time `json:"at"`
+	Size     int64     `json:"size"`
+	ModTime  time.Time `json:"mod_time"`
+	CostUSD  float64   `json:"cost_usd"`
 	// Title is a better title for the session than the one it had when the
 	// recap was written, if that one was poor. Renaming: the agent is to be
 	// given it, once it's between turns. Settled: it's been given or turned
 	// down, and isn't offered again.
-	Title    string `json:"title,omitempty"`
-	Renaming bool   `json:"renaming,omitempty"`
-	Settled  bool   `json:"title_settled,omitempty"`
+	Title         string `json:"title,omitempty"`
+	TitleLanguage string `json:"title_language,omitempty"`
+	Renaming      bool   `json:"renaming,omitempty"`
+	Settled       bool   `json:"title_settled,omitempty"`
 }
 
 func recapDir() string { return filepath.Join(stateDir(), "recaps") }
@@ -54,6 +56,17 @@ func loadRecap(sessionID string) *recap {
 	}
 	sanitize(&r)
 	return &r
+}
+
+// cachedRecap leaves an old recap visible while it is rewritten, but a title
+// suggestion in another language mustn't be offered for acceptance. A title
+// the user already chose (or queued for a busy agent) keeps that decision.
+func cachedRecap(sessionID, language string) *recap {
+	r := loadRecap(sessionID)
+	if r != nil && r.TitleLanguage != language && !r.Settled && !r.Renaming {
+		r.Title = ""
+	}
+	return r
 }
 
 func saveRecap(r recap) error {
@@ -85,8 +98,8 @@ func transcriptStamp(path string) (int64, time.Time) {
 
 // fresh: the cached recap still describes the transcript, which hasn't
 // changed since, or only by what isn't conversation (a rename, say).
-func fresh(r *recap, s claudeSession) bool {
-	if r == nil {
+func fresh(r *recap, s claudeSession, language string) bool {
+	if r == nil || r.Language != language {
 		return false
 	}
 	if !claudes(s) && !s.Native {
@@ -164,7 +177,7 @@ func ensureRecap(ctx context.Context, cfg config, s claudeSession, title string,
 	}
 	defer unlock()
 	c := loadRecap(s.ID)
-	if fresh(c, s) && (!force || c.At.After(started)) {
+	if fresh(c, s, cfg.Language) && (!force || c.At.After(started)) {
 		return *c, false, nil
 	}
 	size, mod := transcriptStamp(s.Transcript)
@@ -175,7 +188,7 @@ func ensureRecap(ctx context.Context, cfg config, s claudeSession, title string,
 	}
 	// At the same time as the recap: both read the same cached conversation.
 	var suggested chan suggestion
-	if titleable(s) && (c == nil || c.Title == "") && poorTitle(title, gitBranch(s.Cwd)) {
+	if wantsTitle(s, c, title, s.Cwd, cfg.Language) {
 		suggested = make(chan suggestion, 1)
 		go func() {
 			t, cost, err := suggestTitle(ctx, cfg, s, title)
@@ -183,8 +196,8 @@ func ensureRecap(ctx context.Context, cfg config, s claudeSession, title string,
 		}()
 	}
 	r, err = runRecap(ctx, cfg, s)
-	if c != nil {
-		r.Title, r.Renaming, r.Settled = c.Title, c.Renaming, c.Settled
+	if c != nil && (c.TitleLanguage == cfg.Language || c.Settled || c.Renaming) {
+		r.Title, r.TitleLanguage, r.Renaming, r.Settled = c.Title, c.TitleLanguage, c.Renaming, c.Settled
 	}
 	if suggested != nil {
 		// Without one the recap is as good: it's asked for again with the next.
@@ -192,12 +205,12 @@ func ensureRecap(ctx context.Context, cfg config, s claudeSession, title string,
 		if sg.err != nil {
 			fmt.Fprintln(os.Stderr, "herdr-recap: a title for", s.ID+":", sg.err)
 		}
-		r.Title, r.Renaming, r.CostUSD = sg.title, false, r.CostUSD+sg.cost
+		r.Title, r.TitleLanguage, r.Renaming, r.CostUSD = sg.title, cfg.Language, false, r.CostUSD+sg.cost
 	}
 	if err != nil {
 		return recap{}, false, err
 	}
-	r.Size, r.ModTime = size, mod
+	r.Size, r.ModTime, r.Language = size, mod, cfg.Language
 	return r, true, saveRecap(r)
 }
 
@@ -307,7 +320,13 @@ func runRecap(ctx context.Context, cfg config, s claudeSession) (recap, error) {
 	case !claudes(s):
 		return runMemexRecap(ctx, cfg, s)
 	}
-	out, err := runCommand(ctx, cfg, s, recapArgs(s.ID))
+	args := recapArgs(s.ID)
+	if cfg.Language != "" {
+		// A language needs an explicit request; /recap chooses its own wording.
+		// Keep the same unsaved fork and JSON result as the native command.
+		args[len(args)-1] = inLanguage(codexPrompt+" If there is no substantive conversation yet, answer exactly: Nothing to recap yet", cfg.Language)
+	}
+	out, err := runCommand(ctx, cfg, s, args)
 	if err != nil {
 		return recap{}, err
 	}

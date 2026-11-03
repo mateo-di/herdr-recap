@@ -14,6 +14,10 @@ type config struct {
 	// written. Short glances away cost nothing. Native Claude recaps can reuse
 	// the session cache when this stays below that cache's lifetime.
 	RecapAfterSeconds int `json:"recap_after_seconds"`
+	// Language is the language requested for recaps and suggested titles,
+	// as a name or locale ("Japanese", "zh-CN"). Empty keeps each agent's
+	// existing behavior, including Claude's own /recap.
+	Language string `json:"language"`
 	// Claude is the claude binary recaps run with. Empty = the one the agent
 	// runs, or "claude" on PATH.
 	Claude string `json:"claude"`
@@ -100,6 +104,7 @@ func readConfig() (config, error) {
 }
 
 func withDefaults(cfg config) config {
+	cfg.Language = strings.TrimSpace(cfg.Language)
 	if cfg.RecapAfterSeconds <= 0 {
 		cfg.RecapAfterSeconds = 180
 	}

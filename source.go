@@ -80,9 +80,9 @@ func (l liveSource) session(ctx context.Context, a agentInfo) (claudeSession, er
 	return s, err
 }
 
-func (liveSource) cached(s claudeSession) (*recap, bool) {
-	r := loadRecap(s.ID)
-	return r, fresh(r, s)
+func (l liveSource) cached(s claudeSession) (*recap, bool) {
+	r := cachedRecap(s.ID, l.cfg.Language)
+	return r, fresh(r, s, l.cfg.Language)
 }
 
 func (l liveSource) recap(ctx context.Context, s claudeSession, title string, force bool) (recap, error) {

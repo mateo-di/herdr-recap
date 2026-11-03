@@ -86,7 +86,7 @@ func runSessions(ctx context.Context, cfg config, args []string) error {
 				_, ran, err = ensureRecap(ctx, cfg, s, a.Title, false)
 			}
 			// A recap that was fresh asked for no title: ask for it now.
-			if err == nil && !ran && wantsTitle(s, loadRecap(s.ID), a.Title, a.Cwd) {
+			if err == nil && !ran && wantsTitle(s, loadRecap(s.ID), a.Title, a.Cwd, cfg.Language) {
 				_, err = ensureTitle(ctx, cfg, s, a.Title)
 			}
 			if err != nil && !errors.Is(err, errNothingYet) {
@@ -123,15 +123,15 @@ func runSessions(ctx context.Context, cfg config, args []string) error {
 		info.Ticket = ticketKey(info.Branch)
 		info.Changes = readChanges(dir)
 		info.Remote, info.Head = gitPushTarget(dir)
-		c := loadRecap(s.ID)
-		info.Fresh = fresh(c, s)
+		c := cachedRecap(s.ID, cfg.Language)
+		info.Fresh = fresh(c, s, cfg.Language)
 		if c != nil {
 			info.Recap, info.At = c.Text, c.At
 			if !c.Settled {
 				info.Title = c.Title
 			}
 		}
-		if s.Transcript != "" && (!info.Fresh || wantsTitle(s, c, a.Title, dir)) {
+		if s.Transcript != "" && (!info.Fresh || wantsTitle(s, c, a.Title, dir, cfg.Language)) {
 			stale = append(stale, a)
 		}
 		out = append(out, info)
@@ -166,8 +166,8 @@ func gitPushTarget(dir string) (remote, head string) {
 
 // wantsTitle: the agent's title is poor and no better one has been
 // suggested, or turned down, yet.
-func wantsTitle(s claudeSession, c *recap, title, dir string) bool {
-	if c != nil && (c.Title != "" || c.Settled) {
+func wantsTitle(s claudeSession, c *recap, title, dir, language string) bool {
+	if c != nil && (c.Settled || c.Renaming || (c.Title != "" && c.TitleLanguage == language)) {
 		return false
 	}
 	if dir == "" {

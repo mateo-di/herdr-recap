@@ -69,7 +69,7 @@ func poorTitle(title, branch string) bool {
 // terminal title and a sidebar.
 const maxTitleWidth = 50
 
-func titlePrompt(title, branch string) string {
+func titlePrompt(title, branch, language string) string {
 	current := "It has no name yet."
 	if t := strings.TrimSpace(title); t != "" && !strings.EqualFold(t, "claude code") {
 		current = fmt.Sprintf("Its current name is %q.", t)
@@ -78,11 +78,17 @@ func titlePrompt(title, branch string) string {
 	if branch != "" {
 		on = fmt.Sprintf(" The git branch is %q: a ticket's key may be in it, or in the conversation.", branch)
 	}
-	return stopStep + "Suggest a name for this session, for a list of sessions. " + current +
-		" Answer with the name alone on one line: no quotes, no explanation, and don't use any tools." +
-		" At most six words and " + fmt.Sprint(maxTitleWidth) + " characters, in Title Case, saying what the work is as a whole rather than its latest step." +
-		" If the work is for a ticket, start with the ticket's key in capitals, like HAL-1921." + on +
-		" If the current name is already right, answer with it unchanged."
+	capitalization := "in Title Case, "
+	unchanged := " If the current name is already right, answer with it unchanged."
+	if language != "" {
+		capitalization = ""
+		unchanged = " If the current name is already right and already in the requested language, answer with it unchanged."
+	}
+	return inLanguage(stopStep+"Suggest a name for this session, for a list of sessions. "+current+
+		" Answer with the name alone on one line: no quotes, no explanation, and don't use any tools."+
+		" At most six words and "+fmt.Sprint(maxTitleWidth)+" characters, "+capitalization+"saying what the work is as a whole rather than its latest step."+
+		" If the work is for a ticket, start with the ticket's key in capitals, like HAL-1921."+on+
+		unchanged, language)
 }
 
 // titleArgs asks the session for a title, in a fork that is never saved, as
@@ -94,7 +100,7 @@ func titleArgs(id, prompt string) []string {
 // suggestTitle asks for a better title than the one the agent has. An
 // answer that isn't a title (several lines, a sentence, too long) is an error.
 func suggestTitle(ctx context.Context, cfg config, s claudeSession, title string) (string, float64, error) {
-	prompt := titlePrompt(title, gitBranch(s.Cwd))
+	prompt := titlePrompt(title, gitBranch(s.Cwd), cfg.Language)
 	if s.Native {
 		// Codex, asked the same in a fork of its own.
 		out, err := runCodex(ctx, cfg, s, prompt)
@@ -207,7 +213,7 @@ func ensureTitle(ctx context.Context, cfg config, s claudeSession, title string)
 		// No recap yet: the title is kept for the one to come.
 		r = &recap{Session: s.ID}
 	}
-	r.Title, r.Renaming, r.Settled, r.CostUSD = t, false, false, r.CostUSD+cost
+	r.Title, r.TitleLanguage, r.Renaming, r.Settled, r.CostUSD = t, cfg.Language, false, false, r.CostUSD+cost
 	return *r, saveRecap(*r)
 }
 
