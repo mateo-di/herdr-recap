@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.12.11 - 2026-11-04
+
+- **omp agents are recapped,** by
+  [@rstacruz](https://github.com/rstacruz)
+  ([#4](https://github.com/mrolafsson/herdr-recap/issues/4)). With herdr's
+  omp integration (`herdr integration install omp`), an Oh-My-Pi pane
+  recaps itself in a fork of its own session, run with no tools, extensions
+  or MCP, and removed once the recap is taken. On by default, as Codex is;
+  in the herdr TUI.
+- **Recaps and suggested titles in your language,** by
+  [@alwinlin23](https://github.com/alwinlin23)
+  ([#7](https://github.com/mrolafsson/herdr-recap/pull/7)).
+  `"language": "zh-CN"` (or `"Japanese"`, `"简体中文"`) in `config.json`
+  asks Claude, Codex, omp and the Memex summarizer in it. Recaps and
+  suggestions in another language are written again; titles you took or
+  turned down are kept. Unset, nothing changes.
+- **A tool call in DeepSeek's spelling is refused too.** Its bars are
+  full-width (`｜DSML`), which 0.12.10's refusal missed.
+
 ## 0.12.10 - 2026-11-03
 
 - **Recaps and titles don't carry on with the work.** A session can stop
