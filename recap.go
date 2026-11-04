@@ -118,16 +118,17 @@ const stopStep = "Stop: this is a question about this session, not a continuatio
 // errNotRecap: the fork answered with a tool call, carrying on with the
 // session's work rather than answering. Nothing is cached, so it's asked
 // again when the session moves on.
-var errNotRecap = errors.New("the answer carried on with the work instead of answering")
+var errNotRecap = errors.New("the answer was a tool call, carrying on with the work")
 
 var backticked = regexp.MustCompile("`[^`]*`")
 
 // toolCallMarkers are how a tool call reads when a model writes one out as
-// text, by model family.
+// text, by model family. DeepSeek's bars are full-width (｜), sometimes
+// doubled, and ASCII in some renderings (omp 18.10.1's, seen 2026-10-14).
 var toolCallMarkers = []string{
-	"|DSML|",                      // DeepSeek
+	"｜DSML", "|DSML|", "<｜tool▁call", // DeepSeek
 	"<function_calls>", "<invoke", // Claude
-	"<tool_call>", "<|tool_call", // Qwen, Hermes; DeepSeek R1's <|tool_calls_begin|>
+	"<tool_call>", "<|tool_call", // Qwen, Hermes
 	"<tool_use>",
 }
 
@@ -302,6 +303,8 @@ func claudeBinary(cfg config, s claudeSession) string {
 
 func runRecap(ctx context.Context, cfg config, s claudeSession) (recap, error) {
 	switch {
+	case s.Native && s.Agent == "omp":
+		return runOmpRecap(ctx, cfg, s)
 	case s.Native:
 		return runCodexRecap(ctx, cfg, s)
 	case !claudes(s):

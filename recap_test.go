@@ -200,6 +200,8 @@ func TestRecapThatCarriesOnIsRefused(t *testing.T) {
 	for _, text := range []string{
 		`I'll rerun it now. <function_calls><invoke name=\"Bash\">`,
 		`<|DSML|function_calls>`,
+		`<｜DSML｜tool_calls>`,
+		`<｜tool▁calls▁begin｜><｜tool▁call▁begin｜>function`,
 		`Rerunning step 1. <tool_call>{\"name\": \"shell\"}</tool_call>`,
 	} {
 		out := []byte(`{"result": "` + text + `", "total_cost_usd": 0.01}`)
