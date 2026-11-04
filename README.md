@@ -509,6 +509,7 @@ Optional: `config.json` in the plugin's config directory
 | Key | Default | Meaning |
 | --- | --- | --- |
 | `recap_after_seconds` | `180` | How long an agent waits on you, unlooked at, before its recap is written |
+| `language` | `""` (agent's default) | Language requested for recaps and suggested titles, as a name or locale such as `"Japanese"` or `"zh-CN"`; does not translate the interface |
 | `claude` | the agent's own | Claude Code binary for native Claude recaps and the default non-Claude summarizer |
 | `agents` | `["claude", "codex", "omp"]` | The agents to recap: any of `"claude"`, `"codex"`, `"omp"`, `"opencode"`, `"hermes"` (see [Other agents](#other-agents)) |
 | `codex` | the agent's own | The Codex binary to run Codex recaps with |
@@ -519,6 +520,34 @@ Optional: `config.json` in the plugin's config directory
 | `timeout_seconds` | `120` | The longest one whole recap may take, covering the Memex lookup, every transcript page and the summarizer together |
 | `theme` | ask the terminal | `"dark"` or `"light"` background |
 | `tokens` | all | Which pane tokens to show, in order, e.g. `["pr"]`. By default all, with a PR from herdr-github said once: its `prs` (state, checks and the agent's other PRs), or else its `pr`, without the `pr_*` details |
+
+### Language
+
+To request Simplified Chinese recaps and title suggestions, set this in
+`config.json` (alongside any other settings):
+
+```json
+{ "language": "zh-CN" }
+```
+
+A language name such as `"简体中文"` works too. Missing, empty or whitespace-only
+keeps the existing behavior, including Claude's native `/recap`. With a language
+set, Claude receives an explicit goal/current-state/next-action recap request in
+the same unsaved session fork, as a title is asked for, so it still reads the
+agent's prompt cache; its wording may differ from the native command.
+Codex, omp and Memex's default or custom summarizer receive the language
+instruction too. Code, paths, proper names and ticket keys are kept as written.
+
+Close and reopen the popup after changing the setting. Cached recaps in another
+language are then treated as out of date and rewritten, even if the conversation
+hasn't changed. The old recap stays visible meanwhile. Unaccepted title
+suggestions in another language are refreshed too; titles already assigned to
+agents, accepted or dismissed suggestions, and queued renames are left alone.
+The interface labels and text read directly from a conversation are not
+translated.
+
+The Herdr app's mod uses the same backend configuration. Set it on each machine
+that runs agents; changing it on one machine does not change the others.
 
 ### Colours
 

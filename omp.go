@@ -290,7 +290,7 @@ var runOmp = func(ctx context.Context, s claudeSession, prompt string) (string, 
 // runOmpRecap recaps an omp session from a fork of it, as runCodexRecap does
 // a Codex session's.
 func runOmpRecap(ctx context.Context, cfg config, s claudeSession) (recap, error) {
-	out, err := runOmp(ctx, s, ompPrompt)
+	out, err := runOmp(ctx, s, inLanguage(ompPrompt, cfg.Language))
 	if err != nil {
 		return recap{}, fmt.Errorf("omp: %w", err)
 	}

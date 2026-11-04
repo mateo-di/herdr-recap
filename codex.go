@@ -154,7 +154,7 @@ func lastLine(s string) string {
 }
 
 func runCodexRecap(ctx context.Context, cfg config, s claudeSession) (recap, error) {
-	out, err := runCodex(ctx, cfg, s, codexPrompt)
+	out, err := runCodex(ctx, cfg, s, inLanguage(codexPrompt, cfg.Language))
 	if err != nil {
 		return recap{}, fmt.Errorf("codex: %w", err)
 	}

@@ -327,11 +327,11 @@ func TestParseSummaryAcceptsClaudeEventArray(t *testing.T) {
 func TestMemexCacheFreshnessUsesSessionStamp(t *testing.T) {
 	s := claudeSession{Agent: "opencode", ID: openCodeSession, Transcript: "/shared/opencode.db", Stamp: "2026-09-28T12:00:00Z/12"}
 	r := &recap{Session: s.ID, Source: "opencode", Stamp: s.Stamp, At: time.Now()}
-	if !fresh(r, s) {
+	if !fresh(r, s, "") {
 		t.Fatal("matching Memex stamp is stale")
 	}
 	s.Stamp = "2026-09-28T12:01:00Z/13"
-	if fresh(r, s) {
+	if fresh(r, s, "") {
 		t.Fatal("changed Memex session is fresh")
 	}
 }
