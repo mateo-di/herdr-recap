@@ -93,8 +93,8 @@ func TestSessionErrors(t *testing.T) {
 }
 
 func TestSessionOfAWrappersChild(t *testing.T) {
-	// A wrapper script (carto_claude) is the foreground process, with claude
-	// as its child: only the child has a session file.
+	// A wrapper script that runs claude without exec is the foreground
+	// process, with claude as its child: only the child has a session file.
 	dir := claudeDir(t, "11", "/home/me/code/app", true)
 	withEnv(t, map[string]string{"CLAUDE_CONFIG_DIR": dir}, nil)
 	processChildren = func(pid int) []int {

@@ -126,8 +126,8 @@ func agentBinary(argv0 string, env map[string]string) string {
 }
 
 // descendantPIDs is pid and then its descendants, nearest first and capped:
-// a wrapper script (carto_claude) is the terminal's foreground process, and
-// claude is its child.
+// a wrapper script that runs claude without exec is the terminal's foreground
+// process, and claude is its child.
 func descendantPIDs(pid int) []int {
 	out := []int{pid}
 	queue := []int{pid}
