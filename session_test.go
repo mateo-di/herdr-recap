@@ -14,7 +14,9 @@ func withEnv(t *testing.T, env map[string]string, err error) {
 	t.Helper()
 	old := processEnv
 	processEnv = func(int) (map[string]string, error) { return env, err }
-	t.Cleanup(func() { processEnv = old })
+	oldKids := processChildren
+	processChildren = func(int) []int { return nil }
+	t.Cleanup(func() { processEnv, processChildren = old, oldKids })
 }
 
 // claudeDir makes a Claude config dir with a running session for pid, started
@@ -87,6 +89,30 @@ func TestSessionErrors(t *testing.T) {
 	write(t, filepath.Join(dir, "sessions", "1.json"), `{"sessionId":"../../etc/passwd"}`)
 	if _, err := sessionForPID(1, ""); err == nil {
 		t.Error("a session ID that isn't one is refused, not used in a path")
+	}
+}
+
+func TestSessionOfAWrappersChild(t *testing.T) {
+	// A wrapper script (carto_claude) is the foreground process, with claude
+	// as its child: only the child has a session file.
+	dir := claudeDir(t, "11", "/home/me/code/app", true)
+	withEnv(t, map[string]string{"CLAUDE_CONFIG_DIR": dir}, nil)
+	processChildren = func(pid int) []int {
+		if pid == 10 {
+			return []int{11}
+		}
+		return nil
+	}
+	s, err := sessionForPID(10, "claude")
+	if err != nil || s.ID != testSession {
+		t.Errorf("%+v %v", s, err)
+	}
+	write(t, filepath.Join(dir, "sessions", "10.json"), `{"sessionId":"`+testSession+`","cwd":"/x"}`)
+	if _, err := sessionForPID(11, "claude"); err != nil {
+		t.Error(err)
+	}
+	if s, err := sessionForPID(10, "claude"); err != nil || s.Cwd != "/x" {
+		t.Errorf("a pid with its own session is tried before its children: %+v %v", s, err)
 	}
 }
 

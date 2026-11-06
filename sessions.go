@@ -131,7 +131,7 @@ func runSessions(ctx context.Context, cfg config, args []string) error {
 				info.Title = c.Title
 			}
 		}
-		if s.Transcript != "" && (!info.Fresh || wantsTitle(s, c, a.Title, dir, cfg.Language)) {
+		if warm(s) && (!info.Fresh || wantsTitle(s, c, a.Title, dir, cfg.Language)) {
 			stale = append(stale, a)
 		}
 		out = append(out, info)
@@ -143,6 +143,18 @@ func runSessions(ctx context.Context, cfg config, args []string) error {
 		}
 	}
 	return json.NewEncoder(os.Stdout).Encode(out)
+}
+
+// promptCacheTTL is how long Claude Code's prompt cache lasts on this account.
+const promptCacheTTL = time.Hour
+
+// warm: the session has a transcript, touched while its prompt cache lasts. A
+// recap forks the session, and past that the fork re-reads the whole
+// conversation at full price, so a session gone quiet isn't recapped in the
+// background.
+func warm(s claudeSession) bool {
+	_, mod := transcriptStamp(s.Transcript)
+	return !mod.IsZero() && time.Since(mod) < promptCacheTTL
 }
 
 // gitPushTarget is where dir's branch pushes: origin's URL, and its

@@ -133,6 +133,7 @@ func TestParseRecap(t *testing.T) {
 	for _, out := range []string{
 		`{"is_error":true,"result":"Invalid API key"}`,
 		`{"result":"Couldn't generate a recap. Run with --debug for details."}`,
+		`{"result":"You've hit your individual spend limit · run /usage-credits to ask your admin for a higher limit · your 5-hour limit resets 8:20pm (America/Argentina/Buenos_Aires)"}`,
 		`{"result":"   "}`,
 		`not json`,
 	} {

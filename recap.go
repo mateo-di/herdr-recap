@@ -379,7 +379,9 @@ func parseRecap(out []byte) (string, float64, error) {
 		return "", cost, fmt.Errorf("claude: %s", shorten(text, 200))
 	case strings.HasPrefix(text, "Nothing to recap yet"):
 		return "", cost, errNothingYet
-	case strings.HasPrefix(text, "Couldn't generate a recap"), strings.HasPrefix(text, "Recap cancelled"):
+	// A usage-limit notice comes back as a normal reply, not an error.
+	case strings.HasPrefix(text, "Couldn't generate a recap"), strings.HasPrefix(text, "Recap cancelled"),
+		strings.HasPrefix(text, "You've hit your"):
 		return "", cost, errors.New(text)
 	case text == "":
 		return "", cost, errors.New("claude gave an empty recap")

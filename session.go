@@ -54,6 +54,22 @@ var sessionIDPattern = regexp.MustCompile(`^[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}
 // tests can stand one in.
 var processEnv = readProcessEnv
 
+// processChildren lists a process's child PIDs (none where /proc has no
+// children file, as on macOS). A variable so tests can stand one in.
+var processChildren = func(pid int) []int {
+	raw, err := os.ReadFile(fmt.Sprintf("/proc/%d/task/%d/children", pid, pid))
+	if err != nil {
+		return nil
+	}
+	var kids []int
+	for _, field := range strings.Fields(string(raw)) {
+		if k, err := strconv.Atoi(field); err == nil && k > 0 {
+			kids = append(kids, k)
+		}
+	}
+	return kids
+}
+
 // resolveSession finds the Claude session running in a pane. herdr reports a
 // session ID of its own for Claude panes, but under a profile switcher it
 // needn't be the one Claude writes its transcript under, so this goes by the
@@ -109,7 +125,44 @@ func agentBinary(argv0 string, env map[string]string) string {
 	return ""
 }
 
+// descendantPIDs is pid and then its descendants, nearest first and capped:
+// a wrapper script (carto_claude) is the terminal's foreground process, and
+// claude is its child.
+func descendantPIDs(pid int) []int {
+	out := []int{pid}
+	queue := []int{pid}
+	seen := map[int]bool{pid: true}
+	for len(queue) > 0 && len(out) < 64 {
+		cur := queue[0]
+		queue = queue[1:]
+		for _, k := range processChildren(cur) {
+			if !seen[k] {
+				seen[k] = true
+				out = append(out, k)
+				queue = append(queue, k)
+			}
+		}
+	}
+	return out
+}
+
+// sessionForPID is the session of pid, or else of the first descendant that
+// has one; with none, the error is pid's own.
 func sessionForPID(pid int, argv0 string) (claudeSession, error) {
+	var firstErr error
+	for _, cand := range descendantPIDs(pid) {
+		s, err := sessionForExactPID(cand, argv0)
+		if err == nil {
+			return s, nil
+		}
+		if firstErr == nil {
+			firstErr = err
+		}
+	}
+	return claudeSession{}, firstErr
+}
+
+func sessionForExactPID(pid int, argv0 string) (claudeSession, error) {
 	env, err := processEnv(pid)
 	if err != nil {
 		return claudeSession{}, fmt.Errorf("reading claude's environment: %w", err)
